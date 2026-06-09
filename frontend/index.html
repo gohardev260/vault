@@ -3,34 +3,98 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vault</title>
+    <title>Vault — Minimalist Password Manager</title>
     <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
-    <div class="auth-wrapper">
-        <div class="auth-card">
-            <h1 id="auth-title">Sign in</h1>
-            <p class="subtitle" id="auth-subtitle">Enter your credentials to continue</p>
+    <!-- Toast container for notifications -->
+    <div class="toast-container" id="toast-container"></div>
 
-            <div class="alert" id="auth-alert"></div>
-
-            <form id="auth-form">
-                <div class="form-group">
-                    <label for="email" class="form-label">Email</label>
-                    <input type="email" id="email" class="form-input" placeholder="you@example.com" required autocomplete="email">
-                </div>
-                <div class="form-group">
-                    <label for="password" class="form-label">Master Password</label>
-                    <input type="password" id="password" class="form-input" placeholder="Enter master password" required minlength="8" autocomplete="current-password">
-                </div>
-                <button type="submit" class="btn btn-primary btn-full" id="auth-submit">Sign in</button>
-            </form>
-
-            <div class="auth-toggle">
-                <span id="toggle-text">No account?</span>
-                <a href="#" id="toggle-link">Create one</a>
+    <div class="landing-container">
+        <!-- Header -->
+        <header class="landing-header">
+            <div class="logo" onclick="window.location.reload()">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                </svg>
+                Vault
             </div>
-        </div>
+            <div class="header-actions">
+                <button class="btn btn-sm" id="header-cta-btn">Create Account</button>
+            </div>
+        </header>
+
+        <!-- Main Hero + Auth grid -->
+        <main class="landing-hero-section">
+            <div class="landing-grid">
+                <!-- Left Column: Copy & Value Props -->
+                <div class="hero-text">
+                    <h2>Your passwords.<br>Clean & secure.</h2>
+                    <p>A minimalist, local-first credentials vault built with zero distractions, zero tracking, and pure encryption.</p>
+                    
+                    <div class="hero-ctas">
+                        <button class="btn btn-primary" id="scroll-to-auth">Get Started</button>
+                        <a href="#features" class="btn" id="scroll-to-features">Learn More</a>
+                    </div>
+
+                    <!-- Small Features Row -->
+                    <div class="features-list" id="features">
+                        <div class="feature-item">
+                            <h3>Strong Encryption</h3>
+                            <p>All passwords are encrypted with industrial-grade AES cryptography.</p>
+                        </div>
+                        <div class="feature-item">
+                            <h3>Direct & Private</h3>
+                            <p>Runs locally or connects seamlessly to your custom database service.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column: Auth Panel -->
+                <div class="auth-panel" id="auth-panel-section">
+                    <div class="auth-card">
+                        <h2 id="auth-title">Sign in</h2>
+                        <p class="subtitle" id="auth-subtitle">Enter your master credentials to open your vault.</p>
+
+                        <form id="auth-form">
+                            <div class="form-group">
+                                <label for="email" class="form-label">Email Address</label>
+                                <input type="email" id="email" class="form-input" placeholder="you@example.com" required autocomplete="email">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="password" class="form-label">Master Password</label>
+                                <div class="input-container">
+                                    <input type="password" id="password" class="form-input" placeholder="Enter master password" required minlength="8" autocomplete="current-password">
+                                    <button type="button" class="pw-toggle-btn" id="pw-toggle" aria-label="Toggle password visibility">
+                                        <!-- Eye Open Icon -->
+                                        <svg class="eye-icon" id="eye-open" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
+                                            <circle cx="12" cy="12" r="3"></circle>
+                                        </svg>
+                                        <!-- Eye Closed Icon (Hidden initially) -->
+                                        <svg class="eye-icon" id="eye-closed" style="display:none" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"></path>
+                                            <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"></path>
+                                            <path d="M6.61 6.61A13.52 13.52 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"></path>
+                                            <line x1="2" y1="2" x2="22" y2="22"></line>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary btn-full" id="auth-submit">Sign in</button>
+                        </form>
+
+                        <div class="auth-toggle">
+                            <span id="toggle-text">No account yet?</span>
+                            <a href="#" id="toggle-link">Create one</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
     </div>
 
     <script>
@@ -40,37 +104,79 @@
         const submitBtn = document.getElementById('auth-submit');
         const toggleText = document.getElementById('toggle-text');
         const toggleLink = document.getElementById('toggle-link');
-        const alert = document.getElementById('auth-alert');
+        const headerCtaBtn = document.getElementById('header-cta-btn');
+        const scrollToAuthBtn = document.getElementById('scroll-to-auth');
+        const pwInput = document.getElementById('password');
+        const pwToggle = document.getElementById('pw-toggle');
+        const eyeOpen = document.getElementById('eye-open');
+        const eyeClosed = document.getElementById('eye-closed');
+        const toastContainer = document.getElementById('toast-container');
 
         let mode = 'login';
 
-        toggleLink.addEventListener('click', (e) => {
-            e.preventDefault();
-            mode = mode === 'login' ? 'register' : 'login';
+        // Toggle authentication modes
+        function setAuthMode(newMode) {
+            mode = newMode;
             if (mode === 'register') {
                 title.textContent = 'Create account';
-                subtitle.textContent = 'Set up your vault with a master password';
+                subtitle.textContent = 'Set up a master password to secure your personal vault.';
                 submitBtn.textContent = 'Create account';
                 toggleText.textContent = 'Have an account?';
                 toggleLink.textContent = 'Sign in';
+                headerCtaBtn.textContent = 'Sign in';
             } else {
                 title.textContent = 'Sign in';
-                subtitle.textContent = 'Enter your credentials to continue';
+                subtitle.textContent = 'Enter your master credentials to open your vault.';
                 submitBtn.textContent = 'Sign in';
-                toggleText.textContent = 'No account?';
+                toggleText.textContent = 'No account yet?';
                 toggleLink.textContent = 'Create one';
+                headerCtaBtn.textContent = 'Create Account';
             }
-            hideAlert();
+        }
+
+        toggleLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            setAuthMode(mode === 'login' ? 'register' : 'login');
         });
 
+        headerCtaBtn.addEventListener('click', () => {
+            setAuthMode(mode === 'login' ? 'register' : 'login');
+            document.getElementById('auth-panel-section').scrollIntoView({ behavior: 'smooth' });
+        });
+
+        scrollToAuthBtn.addEventListener('click', () => {
+            document.getElementById('auth-panel-section').scrollIntoView({ behavior: 'smooth' });
+            document.getElementById('email').focus();
+        });
+
+        document.getElementById('scroll-to-features').addEventListener('click', (e) => {
+            e.preventDefault();
+            document.getElementById('features').scrollIntoView({ behavior: 'smooth' });
+        });
+
+        // Toggle Password Visibility
+        pwToggle.addEventListener('click', () => {
+            const isHidden = pwInput.type === 'password';
+            pwInput.type = isHidden ? 'text' : 'password';
+            if (isHidden) {
+                eyeOpen.style.display = 'none';
+                eyeClosed.style.display = 'block';
+            } else {
+                eyeOpen.style.display = 'block';
+                eyeClosed.style.display = 'none';
+            }
+        });
+
+        // Form Submit
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
-            hideAlert();
+            
             submitBtn.disabled = true;
-            submitBtn.textContent = mode === 'login' ? 'Signing in...' : 'Creating...';
+            const originalText = submitBtn.textContent;
+            submitBtn.textContent = mode === 'login' ? 'Signing in...' : 'Creating account...';
 
             const email = document.getElementById('email').value.trim();
-            const password = document.getElementById('password').value;
+            const password = pwInput.value;
 
             try {
                 const url = mode === 'login' ? '/api/auth/login' : '/api/auth/register';
@@ -82,24 +188,82 @@
 
                 if (!res.ok) {
                     const err = await res.json();
-                    throw new Error(err.detail || 'Request failed');
+                    throw new Error(err.detail || 'Authentication failed. Please verify your entries.');
                 }
 
-                window.location.href = '/dashboard';
+                showToast(
+                    mode === 'login' ? 'Welcome Back' : 'Account Created',
+                    mode === 'login' ? 'Accessing vault dashboard...' : 'Initializing your new vault...',
+                    'success'
+                );
+
+                setTimeout(() => {
+                    window.location.href = '/dashboard';
+                }, 1000);
             } catch (err) {
-                showAlert(err.message, 'error');
-            } finally {
+                showToast('Authentication Error', err.message, 'error');
                 submitBtn.disabled = false;
-                submitBtn.textContent = mode === 'login' ? 'Sign in' : 'Create account';
+                submitBtn.textContent = originalText;
             }
         });
 
-        function showAlert(msg, type) {
-            alert.textContent = msg;
-            alert.className = `alert alert-${type}`;
-            alert.style.display = 'block';
+        // Custom Toast Notifications
+        function showToast(title, desc, type = 'info') {
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            
+            // Checkmark or alert icons
+            let iconSvg = '';
+            if (type === 'success') {
+                iconSvg = `<svg class="toast-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+            } else if (type === 'error') {
+                iconSvg = `<svg class="toast-icon" style="color:var(--danger)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>`;
+            } else {
+                iconSvg = `<svg class="toast-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>`;
+            }
+
+            toast.innerHTML = `
+                ${iconSvg}
+                <div class="toast-content">
+                    <div class="toast-title">${title}</div>
+                    <div class="toast-desc">${desc}</div>
+                </div>
+                <button class="toast-close" aria-label="Close">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+                <div class="toast-progress"></div>
+            `;
+
+            toastContainer.appendChild(toast);
+
+            const progressBar = toast.querySelector('.toast-progress');
+            const duration = 4000; // 4 seconds
+            let start = null;
+
+            function animateProgress(timestamp) {
+                if (!start) start = timestamp;
+                const elapsed = timestamp - start;
+                const remaining = Math.max(0, 100 - (elapsed / duration) * 100);
+                progressBar.style.width = remaining + '%';
+
+                if (elapsed < duration) {
+                    requestAnimationFrame(animateProgress);
+                } else {
+                    dismiss();
+                }
+            }
+
+            requestAnimationFrame(animateProgress);
+
+            function dismiss() {
+                toast.style.animation = 'toastOut 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards';
+                setTimeout(() => {
+                    toast.remove();
+                }, 200);
+            }
+
+            toast.querySelector('.toast-close').addEventListener('click', dismiss);
         }
-        function hideAlert() { alert.style.display = 'none'; }
     </script>
 </body>
 </html>

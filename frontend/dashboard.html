@@ -3,77 +3,117 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vault - Dashboard</title>
+    <title>Vault — Personal Credentials</title>
     <link rel="stylesheet" href="/css/style.css">
-    <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body>
+    <!-- Toast container for notifications -->
+    <div class="toast-container" id="toast-container"></div>
+
     <div class="dash-layout">
         <!-- Header -->
         <header class="dash-header">
-            <span class="logo">Vault</span>
+            <span class="logo">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 6px;">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                </svg>
+                Vault
+            </span>
             <div class="dash-header-right">
-                <span class="user-email" id="user-email"></span>
-                <button class="btn btn-sm" id="logout-btn">Sign out</button>
+                <span class="user-email" id="user-email">...</span>
+                <button class="btn btn-sm" id="logout-btn">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                        <polyline points="16 17 21 12 16 7"></polyline>
+                        <line x1="21" y1="12" x2="9" y2="12"></line>
+                    </svg>
+                    Sign out
+                </button>
             </div>
         </header>
 
-        <!-- Tab Bar -->
+        <!-- Tab Navigation Bar -->
         <div class="tab-bar">
             <button class="tab-btn active" data-tab="passwords">Passwords</button>
             <button class="tab-btn" data-tab="settings">Settings</button>
         </div>
 
-        <!-- Passwords Tab -->
+        <!-- Passwords Tab Panel -->
         <div class="tab-panel active" id="panel-passwords">
             <div class="pw-layout">
-                <!-- Left: list -->
+                <!-- Left: scrollable list -->
                 <div class="pw-list-col">
                     <div class="pw-list-header">
                         <input type="text" class="form-input" id="search-input" placeholder="Search accounts...">
                     </div>
-                    <div class="pw-list-scroll" id="pw-list"></div>
+                    <div class="pw-list-scroll" id="pw-list">
+                        <!-- Filled dynamically by JavaScript -->
+                    </div>
                 </div>
 
-                <!-- Right: add / edit / detail -->
+                <!-- Right: details form panel -->
                 <div class="pw-form-col" id="form-area">
                     <div class="pw-form-inner">
                         <h2 id="form-title">Add Password</h2>
-
-                        <div class="alert" id="form-alert"></div>
 
                         <form id="pw-form">
                             <input type="hidden" id="edit-id">
 
                             <div class="form-group">
                                 <label for="account-name" class="form-label">Account Name</label>
-                                <input type="text" id="account-name" class="form-input" placeholder="e.g. GitHub, Gmail, Netflix" required>
+                                <input type="text" id="account-name" class="form-input" placeholder="e.g. GitHub, Google, Netflix" required>
                             </div>
 
                             <div class="form-group">
                                 <label for="account-pw" class="form-label">Password</label>
                                 <div class="password-row">
-                                    <input type="password" id="account-pw" class="form-input" placeholder="Enter or generate" required>
-                                    <button type="button" class="btn-icon" id="toggle-pw-vis" title="Show">
-                                        <i data-lucide="eye" style="width:16px;height:16px"></i>
-                                    </button>
+                                    <div class="input-container">
+                                        <input type="password" id="account-pw" class="form-input" placeholder="Enter or generate" required>
+                                        <button type="button" class="pw-toggle-btn" id="toggle-pw-vis" aria-label="Toggle password visibility">
+                                            <!-- Eye Open -->
+                                            <svg class="eye-icon" id="eye-open" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
+                                                <circle cx="12" cy="12" r="3"></circle>
+                                            </svg>
+                                            <!-- Eye Closed -->
+                                            <svg class="eye-icon" id="eye-closed" style="display:none" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"></path>
+                                                <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"></path>
+                                                <path d="M6.61 6.61A13.52 13.52 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"></path>
+                                                <line x1="2" y1="2" x2="22" y2="22"></line>
+                                            </svg>
+                                        </button>
+                                    </div>
                                     <button type="button" class="btn btn-sm" id="fill-gen-btn">Generate</button>
                                 </div>
                             </div>
 
-                            <!-- Inline generator -->
+                            <!-- Password Options / Generator Parameters -->
                             <div class="gen-section" id="gen-section">
-                                <h4>Password Generator</h4>
+                                <h4>Password Options</h4>
                                 <div class="gen-length-row">
-                                    <label>Length</label>
+                                    <label for="gen-len">Length</label>
                                     <input type="range" id="gen-len" min="8" max="64" value="16">
                                     <span class="len-val" id="gen-len-val">16</span>
                                 </div>
-                                <div class="gen-controls">
-                                    <label class="gen-check"><input type="checkbox" id="gen-upper" checked> A-Z</label>
-                                    <label class="gen-check"><input type="checkbox" id="gen-lower" checked> a-z</label>
-                                    <label class="gen-check"><input type="checkbox" id="gen-nums" checked> 0-9</label>
-                                    <label class="gen-check"><input type="checkbox" id="gen-syms" checked> !@#</label>
+                                <div class="gen-options-grid">
+                                    <div class="gen-option-row">
+                                        <label for="gen-upper">Uppercase (A-Z)</label>
+                                        <input type="checkbox" id="gen-upper" checked>
+                                    </div>
+                                    <div class="gen-option-row">
+                                        <label for="gen-lower">Lowercase (a-z)</label>
+                                        <input type="checkbox" id="gen-lower" checked>
+                                    </div>
+                                    <div class="gen-option-row">
+                                        <label for="gen-nums">Numbers (0-9)</label>
+                                        <input type="checkbox" id="gen-nums" checked>
+                                    </div>
+                                    <div class="gen-option-row">
+                                        <label for="gen-syms">Special Symbols (!@#)</label>
+                                        <input type="checkbox" id="gen-syms" checked>
+                                    </div>
                                 </div>
                                 <div class="strength-row">
                                     <div class="strength-track"><div class="strength-fill" id="strength-fill"></div></div>
@@ -91,12 +131,11 @@
             </div>
         </div>
 
-        <!-- Settings Tab -->
+        <!-- Settings Tab Panel -->
         <div class="tab-panel" id="panel-settings">
             <div class="settings-panel">
                 <div class="settings-card">
                     <h2>Change Master Password</h2>
-                    <div class="alert" id="settings-alert"></div>
                     <form id="change-pw-form">
                         <div class="form-group">
                             <label for="cur-pw" class="form-label">Current Password</label>
@@ -110,7 +149,7 @@
                             <label for="confirm-pw" class="form-label">Confirm New Password</label>
                             <input type="password" id="confirm-pw" class="form-input" required>
                         </div>
-                        <button type="submit" class="btn btn-primary btn-full">Update Password</button>
+                        <button type="submit" class="btn btn-primary btn-full" id="settings-submit">Update Password</button>
                     </form>
                 </div>
             </div>
