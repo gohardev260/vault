@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vault</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="auth-wrapper">
+        <div class="auth-card">
+            <h1 id="auth-title">Sign in</h1>
+            <p class="subtitle" id="auth-subtitle">Enter your credentials to continue</p>
+
+            <div class="alert" id="auth-alert"></div>
+
+            <form id="auth-form">
+                <div class="form-group">
+                    <label for="email" class="form-label">Email</label>
+                    <input type="email" id="email" class="form-input" placeholder="you@example.com" required autocomplete="email">
+                </div>
+                <div class="form-group">
+                    <label for="password" class="form-label">Master Password</label>
+                    <input type="password" id="password" class="form-input" placeholder="Enter master password" required minlength="8" autocomplete="current-password">
+                </div>
+                <button type="submit" class="btn btn-primary btn-full" id="auth-submit">Sign in</button>
+            </form>
+
+            <div class="auth-toggle">
+                <span id="toggle-text">No account?</span>
+                <a href="#" id="toggle-link">Create one</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('auth-form');
+        const title = document.getElementById('auth-title');
+        const subtitle = document.getElementById('auth-subtitle');
+        const submitBtn = document.getElementById('auth-submit');
+        const toggleText = document.getElementById('toggle-text');
+        const toggleLink = document.getElementById('toggle-link');
+        const alert = document.getElementById('auth-alert');
+
+        let mode = 'login';
+
+        toggleLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            mode = mode === 'login' ? 'register' : 'login';
+            if (mode === 'register') {
+                title.textContent = 'Create account';
+                subtitle.textContent = 'Set up your vault with a master password';
+                submitBtn.textContent = 'Create account';
+                toggleText.textContent = 'Have an account?';
+                toggleLink.textContent = 'Sign in';
+            } else {
+                title.textContent = 'Sign in';
+                subtitle.textContent = 'Enter your credentials to continue';
+                submitBtn.textContent = 'Sign in';
+                toggleText.textContent = 'No account?';
+                toggleLink.textContent = 'Create one';
+            }
+            hideAlert();
+        });
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            hideAlert();
+            submitBtn.disabled = true;
+            submitBtn.textContent = mode === 'login' ? 'Signing in...' : 'Creating...';
+
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+
+            try {
+                const url = mode === 'login' ? '/api/auth/login' : '/api/auth/register';
+                const res = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+
+                if (!res.ok) {
+                    const err = await res.json();
+                    throw new Error(err.detail || 'Request failed');
+                }
+
+                window.location.href = '/dashboard';
+            } catch (err) {
+                showAlert(err.message, 'error');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = mode === 'login' ? 'Sign in' : 'Create account';
+            }
+        });
+
+        function showAlert(msg, type) {
+            alert.textContent = msg;
+            alert.className = `alert alert-${type}`;
+            alert.style.display = 'block';
+        }
+        function hideAlert() { alert.style.display = 'none'; }
+    </script>
+</body>
+</html>

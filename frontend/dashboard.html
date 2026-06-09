@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vault - Dashboard</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+    <div class="dash-layout">
+        <!-- Header -->
+        <header class="dash-header">
+            <span class="logo">Vault</span>
+            <div class="dash-header-right">
+                <span class="user-email" id="user-email"></span>
+                <button class="btn btn-sm" id="logout-btn">Sign out</button>
+            </div>
+        </header>
+
+        <!-- Tab Bar -->
+        <div class="tab-bar">
+            <button class="tab-btn active" data-tab="passwords">Passwords</button>
+            <button class="tab-btn" data-tab="settings">Settings</button>
+        </div>
+
+        <!-- Passwords Tab -->
+        <div class="tab-panel active" id="panel-passwords">
+            <div class="pw-layout">
+                <!-- Left: list -->
+                <div class="pw-list-col">
+                    <div class="pw-list-header">
+                        <input type="text" class="form-input" id="search-input" placeholder="Search accounts...">
+                    </div>
+                    <div class="pw-list-scroll" id="pw-list"></div>
+                </div>
+
+                <!-- Right: add / edit / detail -->
+                <div class="pw-form-col" id="form-area">
+                    <div class="pw-form-inner">
+                        <h2 id="form-title">Add Password</h2>
+
+                        <div class="alert" id="form-alert"></div>
+
+                        <form id="pw-form">
+                            <input type="hidden" id="edit-id">
+
+                            <div class="form-group">
+                                <label for="account-name" class="form-label">Account Name</label>
+                                <input type="text" id="account-name" class="form-input" placeholder="e.g. GitHub, Gmail, Netflix" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="account-pw" class="form-label">Password</label>
+                                <div class="password-row">
+                                    <input type="password" id="account-pw" class="form-input" placeholder="Enter or generate" required>
+                                    <button type="button" class="btn-icon" id="toggle-pw-vis" title="Show">
+                                        <i data-lucide="eye" style="width:16px;height:16px"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-sm" id="fill-gen-btn">Generate</button>
+                                </div>
+                            </div>
+
+                            <!-- Inline generator -->
+                            <div class="gen-section" id="gen-section">
+                                <h4>Password Generator</h4>
+                                <div class="gen-length-row">
+                                    <label>Length</label>
+                                    <input type="range" id="gen-len" min="8" max="64" value="16">
+                                    <span class="len-val" id="gen-len-val">16</span>
+                                </div>
+                                <div class="gen-controls">
+                                    <label class="gen-check"><input type="checkbox" id="gen-upper" checked> A-Z</label>
+                                    <label class="gen-check"><input type="checkbox" id="gen-lower" checked> a-z</label>
+                                    <label class="gen-check"><input type="checkbox" id="gen-nums" checked> 0-9</label>
+                                    <label class="gen-check"><input type="checkbox" id="gen-syms" checked> !@#</label>
+                                </div>
+                                <div class="strength-row">
+                                    <div class="strength-track"><div class="strength-fill" id="strength-fill"></div></div>
+                                    <span class="strength-label" id="strength-label">Strong</span>
+                                </div>
+                            </div>
+
+                            <div style="display:flex;gap:0.5rem;margin-top:1.5rem;">
+                                <button type="submit" class="btn btn-primary" style="flex:1" id="save-btn">Save</button>
+                                <button type="button" class="btn" id="cancel-btn" style="display:none">Cancel</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings Tab -->
+        <div class="tab-panel" id="panel-settings">
+            <div class="settings-panel">
+                <div class="settings-card">
+                    <h2>Change Master Password</h2>
+                    <div class="alert" id="settings-alert"></div>
+                    <form id="change-pw-form">
+                        <div class="form-group">
+                            <label for="cur-pw" class="form-label">Current Password</label>
+                            <input type="password" id="cur-pw" class="form-input" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="new-pw" class="form-label">New Password</label>
+                            <input type="password" id="new-pw" class="form-input" required minlength="8">
+                        </div>
+                        <div class="form-group">
+                            <label for="confirm-pw" class="form-label">Confirm New Password</label>
+                            <input type="password" id="confirm-pw" class="form-input" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-full">Update Password</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/app.js"></script>
+</body>
+</html>
