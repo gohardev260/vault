@@ -1,9 +1,12 @@
-// ── Vault Dashboard JS ─────────────────────────────────────────────────────
+/* ============================================
+   Vault Dashboard — Clean JavaScript
+   No animations. Straightforward logic.
+   ============================================ */
 
 let passwords = [];
 let editingId = null;
 
-// ── Elements ───────────────────────────────────────────────────────────────
+/* ---------- Elements ---------- */
 const pwList        = document.getElementById('pw-list');
 const searchInput   = document.getElementById('search-input');
 const formTitle     = document.getElementById('form-title');
@@ -17,7 +20,7 @@ const userEmail     = document.getElementById('user-email');
 const logoutBtn     = document.getElementById('logout-btn');
 const toastContainer = document.getElementById('toast-container');
 
-// Generator elements
+// Generator
 const genLen        = document.getElementById('gen-len');
 const genLenVal     = document.getElementById('gen-len-val');
 const genUpper      = document.getElementById('gen-upper');
@@ -31,9 +34,8 @@ const togglePwVis   = document.getElementById('toggle-pw-vis');
 const eyeOpen       = document.getElementById('eye-open');
 const eyeClosed     = document.getElementById('eye-closed');
 
-// ── Init ───────────────────────────────────────────────────────────────────
+/* ---------- Init ---------- */
 document.addEventListener('DOMContentLoaded', async () => {
-    // Check authentication
     try {
         const res = await fetch('/api/auth/me');
         if (!res.ok) throw new Error();
@@ -54,29 +56,27 @@ document.addEventListener('DOMContentLoaded', async () => {
     logoutBtn.addEventListener('click', async () => {
         try {
             await fetch('/api/auth/logout', { method: 'POST' });
-            showToast('Signed Out', 'You have successfully logged out of your vault.', 'success');
-            setTimeout(() => {
-                window.location.href = '/';
-            }, 800);
+            showToast('Signed Out', 'You have successfully logged out.', 'success');
+            setTimeout(() => { window.location.href = '/'; }, 800);
         } catch {
             window.location.href = '/';
         }
     });
 });
 
-// ── Tabs ───────────────────────────────────────────────────────────────────
+/* ---------- Tabs ---------- */
 function setupTabs() {
-    document.querySelectorAll('.tab-btn').forEach(btn => {
+    document.querySelectorAll('.tab').forEach(btn => {
         btn.addEventListener('click', () => {
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
             btn.classList.add('active');
             document.getElementById('panel-' + btn.dataset.tab).classList.add('active');
         });
     });
 }
 
-// ── Load passwords ─────────────────────────────────────────────────────────
+/* ---------- Load Passwords ---------- */
 async function loadPasswords() {
     try {
         const res = await fetch('/api/passwords');
@@ -88,15 +88,15 @@ async function loadPasswords() {
     renderList();
 }
 
-// ── Render list ────────────────────────────────────────────────────────────
+/* ---------- Render List ---------- */
 function renderList() {
-    const query = searchInput.value.toLowerCase();
+    const query = searchInput.value.toLowerCase().trim();
     const filtered = passwords.filter(p => p.account_name.toLowerCase().includes(query));
 
     if (filtered.length === 0) {
         pwList.innerHTML = `
             <div class="empty-state">
-                <svg class="empty-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                     <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
                     <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
                 </svg>
@@ -143,16 +143,16 @@ function renderList() {
         </div>
     `).join('');
 
-    // Copy handlers
+    // Copy
     pwList.querySelectorAll('.copy-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
             e.stopPropagation();
             navigator.clipboard.writeText(btn.dataset.pw);
-            showToast('Copied', 'Credential password copied to clipboard.', 'success');
+            showToast('Copied', 'Password copied to clipboard.', 'success');
         });
     });
 
-    // Edit handlers
+    // Edit
     pwList.querySelectorAll('.edit-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
             e.stopPropagation();
@@ -160,17 +160,17 @@ function renderList() {
         });
     });
 
-    // Delete handlers
+    // Delete
     pwList.querySelectorAll('.del-btn').forEach(btn => {
         btn.addEventListener('click', async (e) => {
             e.stopPropagation();
-            if (!confirm('Are you sure you want to permanently delete this credential?')) return;
+            if (!confirm('Delete this credential permanently?')) return;
             try {
                 const res = await fetch(`/api/passwords/${btn.dataset.id}`, { method: 'DELETE' });
                 if (res.ok) {
                     if (editingId === btn.dataset.id) resetForm();
                     await loadPasswords();
-                    showToast('Deleted', 'Credential deleted from your vault.', 'success');
+                    showToast('Deleted', 'Credential removed from vault.', 'success');
                 } else {
                     showToast('Error', 'Failed to delete credential.', 'error');
                 }
@@ -186,13 +186,12 @@ function renderList() {
     });
 }
 
-// ── Form Setup ─────────────────────────────────────────────────────────────
+/* ---------- Form ---------- */
 function setupForm() {
     pwForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const name = nameInput.value.trim();
         const pw = pwInput.value;
-
         if (!name || !pw) return;
 
         saveBtn.disabled = true;
@@ -223,12 +222,12 @@ function setupForm() {
             resetForm();
             await loadPasswords();
             showToast(
-                editingId ? 'Credential Updated' : 'Credential Saved',
-                editingId ? 'Successfully updated vault entry.' : 'Successfully saved new entry.',
+                editingId ? 'Updated' : 'Saved',
+                editingId ? 'Credential updated successfully.' : 'New credential saved.',
                 'success'
             );
         } catch (err) {
-            showToast('Error Saving', err.message, 'error');
+            showToast('Error', err.message, 'error');
         } finally {
             saveBtn.disabled = false;
             saveBtn.textContent = originalText;
@@ -242,13 +241,8 @@ function setupForm() {
     togglePwVis.addEventListener('click', () => {
         const isHidden = pwInput.type === 'password';
         pwInput.type = isHidden ? 'text' : 'password';
-        if (isHidden) {
-            eyeOpen.style.display = 'none';
-            eyeClosed.style.display = 'block';
-        } else {
-            eyeOpen.style.display = 'block';
-            eyeClosed.style.display = 'none';
-        }
+        eyeOpen.style.display = isHidden ? 'none' : 'block';
+        eyeClosed.style.display = isHidden ? 'block' : 'none';
     });
 }
 
@@ -262,15 +256,12 @@ function startEdit(id) {
     pwInput.value = entry.password;
     pwInput.type = 'text';
     editIdField.value = id;
-    
-    // Swap visibility icons to show state
     eyeOpen.style.display = 'none';
     eyeClosed.style.display = 'block';
-    
     cancelBtn.style.display = 'block';
     saveBtn.textContent = 'Update';
 
-    renderList(); // highlight active
+    renderList();
     updateStrength();
 }
 
@@ -282,16 +273,13 @@ function resetForm() {
     cancelBtn.style.display = 'none';
     saveBtn.textContent = 'Save';
     pwInput.type = 'password';
-    
-    // Visibility back to hidden
     eyeOpen.style.display = 'block';
     eyeClosed.style.display = 'none';
-    
     renderList();
     updateStrength();
 }
 
-// ── Generator ──────────────────────────────────────────────────────────────
+/* ---------- Generator ---------- */
 function setupGenerator() {
     genLen.addEventListener('input', () => {
         genLenVal.textContent = genLen.value;
@@ -308,7 +296,7 @@ function setupGenerator() {
         eyeOpen.style.display = 'none';
         eyeClosed.style.display = 'block';
         updateStrength();
-        showToast('Password Generated', 'Secure string successfully loaded into input field.', 'info');
+        showToast('Generated', 'Secure password loaded into field.', 'info');
     });
 
     updateStrength();
@@ -352,7 +340,7 @@ function updateStrength() {
     strengthLabel.style.color = color;
 }
 
-// ── Settings Setup ─────────────────────────────────────────────────────────
+/* ---------- Settings ---------- */
 function setupSettings() {
     const form = document.getElementById('change-pw-form');
     const submitBtn = document.getElementById('settings-submit');
@@ -382,7 +370,7 @@ function setupSettings() {
                 const err = await res.json();
                 throw new Error(err.detail || 'Failed');
             }
-            showToast('Master Password Updated', 'Your main security credentials have been updated.', 'success');
+            showToast('Password Updated', 'Your master password has been changed.', 'success');
             form.reset();
         } catch (err) {
             showToast('Update Failed', err.message, 'error');
@@ -393,65 +381,39 @@ function setupSettings() {
     });
 }
 
-// ── Dynamic Custom Toast Notification System ───────────────────────────────
-function showToast(title, desc, type = 'info') {
+/* ---------- Toast (no animation) ---------- */
+function showToast(title, desc, type) {
     const toast = document.createElement('div');
     toast.className = 'toast';
-    
-    // Monochrome success/error/info SVGs
+
     let iconSvg = '';
     if (type === 'success') {
-        iconSvg = `<svg class="toast-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+        iconSvg = `<svg class="toast-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
     } else if (type === 'error') {
-        iconSvg = `<svg class="toast-icon" style="color:var(--danger)" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>`;
+        iconSvg = `<svg class="toast-icon toast-icon-error" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>`;
     } else {
-        iconSvg = `<svg class="toast-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>`;
+        iconSvg = `<svg class="toast-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>`;
     }
 
     toast.innerHTML = `
         ${iconSvg}
-        <div class="toast-content">
+        <div class="toast-body">
             <div class="toast-title">${title}</div>
             <div class="toast-desc">${desc}</div>
         </div>
         <button class="toast-close" aria-label="Close">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
         </button>
-        <div class="toast-progress"></div>
     `;
 
     toastContainer.appendChild(toast);
 
-    const progressBar = toast.querySelector('.toast-progress');
-    const duration = 4000; // 4 seconds duration
-    let start = null;
-
-    function animateProgress(timestamp) {
-        if (!start) start = timestamp;
-        const elapsed = timestamp - start;
-        const remaining = Math.max(0, 100 - (elapsed / duration) * 100);
-        progressBar.style.width = remaining + '%';
-
-        if (elapsed < duration) {
-            requestAnimationFrame(animateProgress);
-        } else {
-            dismiss();
-        }
-    }
-
-    requestAnimationFrame(animateProgress);
-
-    function dismiss() {
-        toast.style.animation = 'toastOut 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards';
-        setTimeout(() => {
-            toast.remove();
-        }, 200);
-    }
-
+    const dismiss = () => { toast.remove(); };
+    setTimeout(dismiss, 4000);
     toast.querySelector('.toast-close').addEventListener('click', dismiss);
 }
 
-// ── Helper functions ───────────────────────────────────────────────────────
+/* ---------- Helpers ---------- */
 function esc(str) {
     const d = document.createElement('div');
     d.textContent = str;
@@ -464,11 +426,10 @@ function formatDate(iso) {
     return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
-// ── Profile Dropdown handler ──────────────────────────────────────────────
+/* ---------- Profile Dropdown ---------- */
 function setupProfileDropdown() {
     const trigger = document.getElementById('profile-trigger');
     const dropdown = document.getElementById('profile-dropdown');
-
     if (!trigger || !dropdown) return;
 
     trigger.addEventListener('click', (e) => {
@@ -482,4 +443,3 @@ function setupProfileDropdown() {
         }
     });
 }
-
