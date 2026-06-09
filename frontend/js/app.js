@@ -49,6 +49,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     setupGenerator();
     setupForm();
     setupSettings();
+    setupProfileDropdown();
 
     logoutBtn.addEventListener('click', async () => {
         try {
@@ -462,3 +463,23 @@ function formatDate(iso) {
     const d = new Date(iso);
     return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
+
+// ── Profile Dropdown handler ──────────────────────────────────────────────
+function setupProfileDropdown() {
+    const trigger = document.getElementById('profile-trigger');
+    const dropdown = document.getElementById('profile-dropdown');
+
+    if (!trigger || !dropdown) return;
+
+    trigger.addEventListener('click', (e) => {
+        e.stopPropagation();
+        dropdown.classList.toggle('show');
+    });
+
+    document.addEventListener('click', (e) => {
+        if (!dropdown.contains(e.target) && e.target !== trigger) {
+            dropdown.classList.remove('show');
+        }
+    });
+}
+

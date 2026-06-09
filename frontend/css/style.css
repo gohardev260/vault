@@ -210,6 +210,10 @@ h1, h2, h3, h4 {
     width: 100%;
 }
 
+.input-container .form-input {
+    padding-right: 40px;
+}
+
 .form-input {
     width: 100%;
     height: 40px;
@@ -263,6 +267,10 @@ h1, h2, h3, h4 {
 .pw-toggle-btn:hover {
     color: var(--text-primary);
     background-color: var(--bg-hover);
+}
+
+.pw-toggle-btn:focus {
+    outline: none;
 }
 
 /* ── Buttons ────────────────────────────────────────────────────────────── */
@@ -378,6 +386,80 @@ h1, h2, h3, h4 {
     align-items: center;
     gap: 1rem;
 }
+
+/* ── Profile Menu Dropdown ──────────────────────────────────────────────── */
+.profile-menu-container {
+    position: relative;
+    display: inline-block;
+}
+
+.profile-trigger-btn {
+    width: 36px;
+    height: 36px;
+    border: 1px solid var(--border);
+    background: var(--bg-card);
+    color: var(--text-primary);
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition);
+}
+
+.profile-trigger-btn:hover {
+    border-color: var(--border-hover);
+    background-color: var(--bg-hover);
+}
+
+.profile-dropdown {
+    display: none;
+    position: absolute;
+    right: 0;
+    top: 42px;
+    width: 240px;
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-hover);
+    border-radius: var(--radius);
+    padding: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    z-index: 1000;
+    animation: fadeScale 0.15s ease-out;
+}
+
+.profile-dropdown.show {
+    display: block;
+}
+
+.profile-dropdown-email {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    padding: 4px 8px 8px 8px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 8px;
+    word-break: break-all;
+}
+
+.dropdown-item {
+    width: 100%;
+    text-align: left;
+    background: none;
+    border: none;
+    padding: 8px;
+    font-family: var(--font);
+    font-size: 0.875rem;
+    color: var(--text-primary);
+    cursor: pointer;
+    border-radius: var(--radius);
+    display: flex;
+    align-items: center;
+    transition: var(--transition);
+}
+
+.dropdown-item:hover {
+    background-color: var(--bg-hover);
+}
+
 
 .dash-header-right .user-email {
     font-size: 0.875rem;
@@ -819,21 +901,34 @@ h1, h2, h3, h4 {
     body {
         overflow-y: auto;
     }
+    .dash-layout {
+        height: auto;
+        min-height: 100vh;
+        overflow-y: visible;
+    }
+    .tab-panel {
+        overflow: visible;
+        height: auto;
+        flex: none;
+    }
     .pw-layout {
         grid-template-columns: 1fr;
         height: auto;
+        overflow: visible;
     }
     .pw-list-col {
         border-right: none;
         border-bottom: 1px solid var(--border);
-        max-height: 40vh;
+        max-height: 300px;
+        height: auto;
     }
     .pw-form-col {
-        padding: 1.5rem;
+        padding: 1.5rem 1rem;
         height: auto;
         overflow: visible;
+        flex: none;
     }
     .settings-panel {
-        padding: 1.5rem;
+        padding: 1.5rem 1rem;
     }
 }
