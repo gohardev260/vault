@@ -66,6 +66,7 @@ class SavedPassword(Base):
     id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     user_id = Column(String(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     account_name = Column(String(255), nullable=False)
+    username = Column(String(255), nullable=True)
     encrypted_password = Column(Text, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
@@ -81,11 +82,13 @@ class AuthRequest(BaseModel):
 
 class PasswordCreate(BaseModel):
     account_name: str
+    username: Optional[str] = ""
     password: str
 
 
 class PasswordUpdate(BaseModel):
     account_name: Optional[str] = None
+    username: Optional[str] = None
     password: Optional[str] = None
 
 
@@ -162,6 +165,15 @@ app.add_middleware(
 @app.on_event("startup")
 def on_startup():
     Base.metadata.create_all(bind=engine)
+    db = SessionLocal()
+    try:
+        db.execute("ALTER TABLE saved_passwords ADD COLUMN username VARCHAR(255)")
+        db.commit()
+        print("[vault] added username column to saved_passwords")
+    except Exception:
+        db.rollback()
+    finally:
+        db.close()
     print("[vault] tables created / verified")
 
 
@@ -223,6 +235,7 @@ def list_passwords(user: User = Depends(get_current_user), db: Session = Depends
         out.append({
             "id": r.id,
             "account_name": r.account_name,
+            "username": r.username or "",
             "password": pw,
             "created_at": r.created_at.isoformat() if r.created_at else "",
             "updated_at": r.updated_at.isoformat() if r.updated_at else "",
@@ -235,6 +248,7 @@ def create_password(body: PasswordCreate, user: User = Depends(get_current_user)
     entry = SavedPassword(
         user_id=user.id,
         account_name=body.account_name,
+        username=body.username,
         encrypted_password=encrypt_value(body.password),
     )
     db.add(entry)
@@ -250,6 +264,8 @@ def update_password(pid: str, body: PasswordUpdate, user: User = Depends(get_cur
         raise HTTPException(status_code=404, detail="Not found")
     if body.account_name is not None:
         entry.account_name = body.account_name
+    if body.username is not None:
+        entry.username = body.username
     if body.password is not None:
         entry.encrypted_password = encrypt_value(body.password)
     entry.updated_at = datetime.utcnow()
