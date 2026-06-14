@@ -10,7 +10,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, JSONResponse
 from pydantic import BaseModel, EmailStr
-from sqlalchemy import create_engine, Column, String, DateTime, ForeignKey, Text
+from sqlalchemy import create_engine, Column, String, DateTime, ForeignKey, Text, text
 from sqlalchemy.orm import declarative_base, sessionmaker, Session, relationship
 from jose import jwt, JWTError
 import bcrypt as _bcrypt
@@ -167,7 +167,7 @@ def on_startup():
     Base.metadata.create_all(bind=engine)
     db = SessionLocal()
     try:
-        db.execute("ALTER TABLE saved_passwords ADD COLUMN username VARCHAR(255)")
+        db.execute(text("ALTER TABLE saved_passwords ADD COLUMN username VARCHAR(255)"))
         db.commit()
         print("[vault] added username column to saved_passwords")
     except Exception:
