@@ -628,9 +628,9 @@ html, body {
 }
 
 /* ==========================================================================
-   SETTINGS LAYOUT
+   PROFILE LAYOUT
    ========================================================================== */
-.settings-container {
+.profile-container {
     display: flex;
     justify-content: center;
     align-items: flex-start;
@@ -639,16 +639,54 @@ html, body {
     overflow-y: auto;
 }
 
-.settings-card {
+.profile-card {
     max-width: 480px;
     width: 100%;
 }
 
-.settings-card h3 {
+.profile-card h3 {
     font-size: 18px;
     font-weight: 700;
     margin-bottom: 20px;
     letter-spacing: -0.02em;
+}
+
+.profile-info-section {
+    margin-bottom: 8px;
+}
+
+.profile-info-label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: var(--text-sec);
+    letter-spacing: 0.05em;
+}
+
+.profile-info-email {
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--text);
+    margin-top: 4px;
+    word-break: break-all;
+}
+
+.profile-divider {
+    border: 0;
+    border-top: 1px solid var(--border);
+    margin: 24px 0;
+}
+
+.btn-danger {
+    background-color: var(--danger);
+    color: #ffffff;
+    border-color: var(--danger);
+    font-weight: 600;
+}
+
+.btn-danger:hover {
+    background-color: #dc2626;
+    border-color: #dc2626;
 }
 
 /* ==========================================================================

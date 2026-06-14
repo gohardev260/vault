@@ -52,19 +52,24 @@ def get_db():
 
 # ── Models ────────────────────────────────────────────────────────────────────
 
+
 class User(Base):
     __tablename__ = "users"
     id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     email = Column(String(255), unique=True, nullable=False, index=True)
     password_hash = Column(String(255), nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
-    passwords = relationship("SavedPassword", back_populates="owner", cascade="all, delete-orphan")
+    passwords = relationship(
+        "SavedPassword", back_populates="owner", cascade="all, delete-orphan"
+    )
 
 
 class SavedPassword(Base):
     __tablename__ = "saved_passwords"
     id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
-    user_id = Column(String(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    user_id = Column(
+        String(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+    )
     account_name = Column(String(255), nullable=False)
     username = Column(String(255), nullable=True)
     encrypted_password = Column(Text, nullable=False)
@@ -74,6 +79,7 @@ class SavedPassword(Base):
 
 
 # ── Schemas ───────────────────────────────────────────────────────────────────
+
 
 class AuthRequest(BaseModel):
     email: EmailStr
@@ -98,6 +104,7 @@ class ChangePasswordRequest(BaseModel):
 
 
 # ── Security helpers ──────────────────────────────────────────────────────────
+
 
 def hash_pw(password: str) -> str:
     return _bcrypt.hashpw(password.encode(), _bcrypt.gensalt()).decode()
@@ -124,6 +131,7 @@ def decrypt_value(cipher: str) -> str:
 
 
 # ── Auth dependency ───────────────────────────────────────────────────────────
+
 
 def get_current_user(request: Request, db: Session = Depends(get_db)) -> User:
     token = None
@@ -179,6 +187,7 @@ def on_startup():
 
 # ── Auth routes ───────────────────────────────────────────────────────────────
 
+
 @app.post("/api/auth/register")
 def register(body: AuthRequest, db: Session = Depends(get_db)):
     if db.query(User).filter(User.email == body.email).first():
@@ -189,7 +198,9 @@ def register(body: AuthRequest, db: Session = Depends(get_db)):
     db.refresh(user)
     token = create_token(user.id)
     resp = JSONResponse({"message": "ok"})
-    resp.set_cookie("access_token", token, httponly=True, samesite="lax", max_age=2592000)
+    resp.set_cookie(
+        "access_token", token, httponly=True, samesite="lax", max_age=2592000
+    )
     return resp
 
 
@@ -200,7 +211,9 @@ def login(body: AuthRequest, db: Session = Depends(get_db)):
         raise HTTPException(status_code=401, detail="Invalid credentials")
     token = create_token(user.id)
     resp = JSONResponse({"message": "ok"})
-    resp.set_cookie("access_token", token, httponly=True, samesite="lax", max_age=2592000)
+    resp.set_cookie(
+        "access_token", token, httponly=True, samesite="lax", max_age=2592000
+    )
     return resp
 
 
@@ -218,8 +231,11 @@ def me(user: User = Depends(get_current_user)):
 
 # ── Password CRUD ─────────────────────────────────────────────────────────────
 
+
 @app.get("/api/passwords")
-def list_passwords(user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+def list_passwords(
+    user: User = Depends(get_current_user), db: Session = Depends(get_db)
+):
     rows = (
         db.query(SavedPassword)
         .filter(SavedPassword.user_id == user.id)
@@ -232,19 +248,25 @@ def list_passwords(user: User = Depends(get_current_user), db: Session = Depends
             pw = decrypt_value(r.encrypted_password)
         except Exception:
             pw = ""
-        out.append({
-            "id": r.id,
-            "account_name": r.account_name,
-            "username": r.username or "",
-            "password": pw,
-            "created_at": r.created_at.isoformat() if r.created_at else "",
-            "updated_at": r.updated_at.isoformat() if r.updated_at else "",
-        })
+        out.append(
+            {
+                "id": r.id,
+                "account_name": r.account_name,
+                "username": r.username or "",
+                "password": pw,
+                "created_at": r.created_at.isoformat() if r.created_at else "",
+                "updated_at": r.updated_at.isoformat() if r.updated_at else "",
+            }
+        )
     return out
 
 
 @app.post("/api/passwords")
-def create_password(body: PasswordCreate, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+def create_password(
+    body: PasswordCreate,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
     entry = SavedPassword(
         user_id=user.id,
         account_name=body.account_name,
@@ -258,8 +280,17 @@ def create_password(body: PasswordCreate, user: User = Depends(get_current_user)
 
 
 @app.put("/api/passwords/{pid}")
-def update_password(pid: str, body: PasswordUpdate, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    entry = db.query(SavedPassword).filter(SavedPassword.id == pid, SavedPassword.user_id == user.id).first()
+def update_password(
+    pid: str,
+    body: PasswordUpdate,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    entry = (
+        db.query(SavedPassword)
+        .filter(SavedPassword.id == pid, SavedPassword.user_id == user.id)
+        .first()
+    )
     if not entry:
         raise HTTPException(status_code=404, detail="Not found")
     if body.account_name is not None:
@@ -274,8 +305,14 @@ def update_password(pid: str, body: PasswordUpdate, user: User = Depends(get_cur
 
 
 @app.delete("/api/passwords/{pid}")
-def delete_password(pid: str, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    entry = db.query(SavedPassword).filter(SavedPassword.id == pid, SavedPassword.user_id == user.id).first()
+def delete_password(
+    pid: str, user: User = Depends(get_current_user), db: Session = Depends(get_db)
+):
+    entry = (
+        db.query(SavedPassword)
+        .filter(SavedPassword.id == pid, SavedPassword.user_id == user.id)
+        .first()
+    )
     if not entry:
         raise HTTPException(status_code=404, detail="Not found")
     db.delete(entry)
@@ -285,8 +322,13 @@ def delete_password(pid: str, user: User = Depends(get_current_user), db: Sessio
 
 # ── Settings ──────────────────────────────────────────────────────────────────
 
+
 @app.post("/api/settings/change-password")
-def change_master(body: ChangePasswordRequest, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+def change_master(
+    body: ChangePasswordRequest,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
     if not verify_pw(body.current_password, user.password_hash):
         raise HTTPException(status_code=400, detail="Current password is wrong")
     user.password_hash = hash_pw(body.new_password)
