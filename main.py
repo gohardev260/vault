@@ -24,7 +24,7 @@ if DATABASE_URL.startswith("postgres://"):
 
 JWT_SECRET = os.getenv("JWT_SECRET", "dev-secret-change-in-production")
 JWT_ALGORITHM = "HS256"
-JWT_EXPIRY_HOURS = 24
+JWT_EXPIRY_HOURS = 720
 
 ENCRYPTION_SECRET = os.getenv("ENCRYPTION_KEY", JWT_SECRET)
 _key_bytes = hashlib.sha256(ENCRYPTION_SECRET.encode()).digest()
@@ -177,7 +177,7 @@ def register(body: AuthRequest, db: Session = Depends(get_db)):
     db.refresh(user)
     token = create_token(user.id)
     resp = JSONResponse({"message": "ok"})
-    resp.set_cookie("access_token", token, httponly=True, samesite="lax", max_age=86400)
+    resp.set_cookie("access_token", token, httponly=True, samesite="lax", max_age=2592000)
     return resp
 
 
@@ -188,7 +188,7 @@ def login(body: AuthRequest, db: Session = Depends(get_db)):
         raise HTTPException(status_code=401, detail="Invalid credentials")
     token = create_token(user.id)
     resp = JSONResponse({"message": "ok"})
-    resp.set_cookie("access_token", token, httponly=True, samesite="lax", max_age=86400)
+    resp.set_cookie("access_token", token, httponly=True, samesite="lax", max_age=2592000)
     return resp
 
 

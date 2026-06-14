@@ -345,6 +345,21 @@ function setupSettings() {
     const form = document.getElementById('change-pw-form');
     const submitBtn = document.getElementById('settings-submit');
 
+    const toggleBtns = form.querySelectorAll('.toggle-settings-pw');
+    toggleBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const targetId = btn.dataset.target;
+            const input = document.getElementById(targetId);
+            const eyeOpen = btn.querySelector('.eye-open');
+            const eyeClosed = btn.querySelector('.eye-closed');
+
+            const isHidden = input.type === 'password';
+            input.type = isHidden ? 'text' : 'password';
+            eyeOpen.style.display = isHidden ? 'none' : 'block';
+            eyeClosed.style.display = isHidden ? 'block' : 'none';
+        });
+    });
+
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
         const cur = document.getElementById('cur-pw').value;
