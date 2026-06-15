@@ -17,7 +17,6 @@ const pwInput       = document.getElementById('account-pw');
 const saveBtn       = document.getElementById('save-btn');
 const cancelBtn     = document.getElementById('cancel-btn');
 const userEmail     = document.getElementById('user-email');
-const logoutBtn     = document.getElementById('logout-btn');
 const toastContainer = document.getElementById('toast-container');
 
 // Modal Elements
@@ -58,14 +57,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     setupSettings();
     setupModalEvents();
 
-    logoutBtn.addEventListener('click', async () => {
-        try {
-            await fetch('/api/auth/logout', { method: 'POST' });
-            showToast('Signed Out', 'You have successfully logged out.', 'success');
-            setTimeout(() => { window.location.href = '/'; }, 800);
-        } catch {
-            window.location.href = '/';
-        }
+    document.querySelectorAll('.logout-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            try {
+                await fetch('/api/auth/logout', { method: 'POST' });
+                showToast('Signed Out', 'You have successfully logged out.', 'success');
+                setTimeout(() => { window.location.href = '/'; }, 800);
+            } catch {
+                window.location.href = '/';
+            }
+        });
     });
 });
 
