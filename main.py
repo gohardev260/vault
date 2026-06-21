@@ -188,7 +188,7 @@ def on_startup():
     except Exception:
         db.rollback()
     try:
-        db.execute(text("ALTER TABLE saved_passwords ADD COLUMN is_pinned BOOLEAN DEFAULT 0"))
+        db.execute(text("ALTER TABLE saved_passwords ADD COLUMN is_pinned BOOLEAN DEFAULT FALSE"))
         db.commit()
         print("[vault] added is_pinned column to saved_passwords")
     except Exception:
