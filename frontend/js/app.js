@@ -14,6 +14,7 @@ const editIdField   = document.getElementById('edit-id');
 const nameInput     = document.getElementById('account-name');
 const usernameInput = document.getElementById('account-username');
 const pwInput       = document.getElementById('account-pw');
+const pinnedInput   = document.getElementById('account-pinned');
 const saveBtn       = document.getElementById('save-btn');
 const cancelBtn     = document.getElementById('cancel-btn');
 const userEmail     = document.getElementById('user-email');
@@ -120,7 +121,17 @@ function renderTable() {
 
     pwTableBody.innerHTML = filtered.map(p => `
         <tr data-id="${p.id}">
-            <td class="font-medium">${esc(p.account_name)}</td>
+            <td class="font-medium">
+                <div class="col-account-name">
+                    <button class="btn-icon pin-row-btn ${p.is_pinned ? 'pinned' : ''}" data-id="${p.id}" title="${p.is_pinned ? 'Unpin password' : 'Pin password'}">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="12" y1="17" x2="12" y2="22"></line>
+                            <path d="M5 17h14v-1.76a2 2 0 0 0-.44-1.24l-2.32-2.9A2 2 0 0 1 15.8 9.86V4a1 1 0 0 0-1-1H9.2a1 1 0 0 0-1 1v5.86a2 2 0 0 1-.44 1.24l-2.32 2.9a2 2 0 0 0-.44 1.24z"></path>
+                        </svg>
+                    </button>
+                    <span class="account-name-text">${esc(p.account_name)}</span>
+                </div>
+            </td>
             <td>${esc(p.username || '—')}</td>
             <td>
                 <div class="col-pw-field">
@@ -167,6 +178,36 @@ function renderTable() {
             </td>
         </tr>
     `).join('');
+
+    // Toggle Pin Status
+    pwTableBody.querySelectorAll('.pin-row-btn').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+            e.stopPropagation();
+            const id = btn.dataset.id;
+            const entry = passwords.find(p => p.id === id);
+            if (!entry) return;
+            const newPinned = !entry.is_pinned;
+            try {
+                const res = await fetch(`/api/passwords/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ is_pinned: newPinned })
+                });
+                if (res.ok) {
+                    await loadPasswords();
+                    showToast(
+                        newPinned ? 'Pinned' : 'Unpinned',
+                        newPinned ? 'Password pinned to top.' : 'Password unpinned.',
+                        'success'
+                    );
+                } else {
+                    showToast('Error', 'Failed to update pin status.', 'error');
+                }
+            } catch (err) {
+                showToast('Error', err.message, 'error');
+            }
+        });
+    });
 
     // Toggle Visibility
     pwTableBody.querySelectorAll('.view-row-btn').forEach(btn => {
@@ -230,6 +271,7 @@ function setupForm() {
         const name = nameInput.value.trim();
         const username = usernameInput.value.trim();
         const pw = pwInput.value;
+        const isPinned = pinnedInput.checked;
         if (!name || !pw) return;
 
         saveBtn.disabled = true;
@@ -242,13 +284,13 @@ function setupForm() {
                 res = await fetch(`/api/passwords/${editingId}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ account_name: name, username: username, password: pw })
+                    body: JSON.stringify({ account_name: name, username: username, password: pw, is_pinned: isPinned })
                 });
             } else {
                 res = await fetch('/api/passwords', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ account_name: name, username: username, password: pw })
+                    body: JSON.stringify({ account_name: name, username: username, password: pw, is_pinned: isPinned })
                 });
             }
 
@@ -294,6 +336,7 @@ function startEdit(id) {
     usernameInput.value = entry.username || '';
     pwInput.value = entry.password;
     pwInput.type = 'password';
+    pinnedInput.checked = entry.is_pinned || false;
     editIdField.value = id;
     eyeOpen.style.display = 'block';
     eyeClosed.style.display = 'none';
@@ -310,6 +353,7 @@ function resetForm() {
     formTitle.textContent = 'Add Password';
     saveBtn.textContent = 'Save';
     pwInput.type = 'password';
+    pinnedInput.checked = false;
     eyeOpen.style.display = 'block';
     eyeClosed.style.display = 'none';
     updateStrength();

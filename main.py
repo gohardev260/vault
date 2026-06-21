@@ -10,7 +10,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, JSONResponse
 from pydantic import BaseModel, EmailStr
-from sqlalchemy import create_engine, Column, String, DateTime, ForeignKey, Text, text
+from sqlalchemy import create_engine, Column, String, DateTime, ForeignKey, Text, text, Boolean
 from sqlalchemy.orm import declarative_base, sessionmaker, Session, relationship
 from jose import jwt, JWTError
 import bcrypt as _bcrypt
@@ -75,6 +75,7 @@ class SavedPassword(Base):
     encrypted_password = Column(Text, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    is_pinned = Column(Boolean, default=False, nullable=False, server_default="0")
     owner = relationship("User", back_populates="passwords")
 
 
@@ -90,12 +91,14 @@ class PasswordCreate(BaseModel):
     account_name: str
     username: Optional[str] = ""
     password: str
+    is_pinned: Optional[bool] = False
 
 
 class PasswordUpdate(BaseModel):
     account_name: Optional[str] = None
     username: Optional[str] = None
     password: Optional[str] = None
+    is_pinned: Optional[bool] = None
 
 
 class ChangePasswordRequest(BaseModel):
@@ -184,6 +187,12 @@ def on_startup():
         print("[vault] added username column to saved_passwords")
     except Exception:
         db.rollback()
+    try:
+        db.execute(text("ALTER TABLE saved_passwords ADD COLUMN is_pinned BOOLEAN DEFAULT 0"))
+        db.commit()
+        print("[vault] added is_pinned column to saved_passwords")
+    except Exception:
+        db.rollback()
     finally:
         db.close()
     print("[vault] tables created / verified")
@@ -243,7 +252,7 @@ def list_passwords(
     rows = (
         db.query(SavedPassword)
         .filter(SavedPassword.user_id == user.id)
-        .order_by(SavedPassword.created_at.desc())
+        .order_by(SavedPassword.is_pinned.desc(), SavedPassword.created_at.desc())
         .all()
     )
     out = []
@@ -260,6 +269,7 @@ def list_passwords(
                 "password": pw,
                 "created_at": r.created_at.isoformat() if r.created_at else "",
                 "updated_at": r.updated_at.isoformat() if r.updated_at else "",
+                "is_pinned": r.is_pinned,
             }
         )
     return out
@@ -276,6 +286,7 @@ def create_password(
         account_name=body.account_name,
         username=body.username,
         encrypted_password=encrypt_value(body.password),
+        is_pinned=body.is_pinned if body.is_pinned is not None else False,
     )
     db.add(entry)
     db.commit()
@@ -303,6 +314,8 @@ def update_password(
         entry.username = body.username
     if body.password is not None:
         entry.encrypted_password = encrypt_value(body.password)
+    if body.is_pinned is not None:
+        entry.is_pinned = body.is_pinned
     entry.updated_at = datetime.utcnow()
     db.commit()
     return {"message": "updated"}

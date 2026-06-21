@@ -564,6 +564,7 @@ html, body {
 .table-responsive {
     flex: 1;
     overflow-y: auto;
+    overflow-x: auto;
 }
 
 .db-table {
@@ -625,6 +626,50 @@ html, body {
     display: inline-flex;
     gap: 4px;
     justify-content: flex-end;
+}
+
+.col-account-name {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.pin-row-btn {
+    color: var(--text-muted);
+    transition: color 0.15s, transform 0.15s, opacity 0.15s;
+    padding: 0;
+    width: 24px;
+    height: 24px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    background: transparent;
+    border: none;
+}
+
+.pin-row-btn:hover {
+    color: var(--text);
+    transform: scale(1.1);
+}
+
+.pin-row-btn.pinned {
+    color: #f59e0b; /* Golden color for pinned */
+    fill: rgba(245, 158, 11, 0.15); /* Soft inner fill */
+}
+
+.pin-row-btn.pinned:hover {
+    color: #d97706;
+}
+
+/* Semi-transparent pin button unless hovered or pinned */
+.db-table tbody tr .pin-row-btn {
+    opacity: 0.3;
+}
+
+.db-table tbody tr:hover .pin-row-btn,
+.db-table tbody tr .pin-row-btn.pinned {
+    opacity: 1;
 }
 
 /* ==========================================================================
@@ -1068,9 +1113,10 @@ html, body {
 
     /* Main responsive viewport settings */
     .main-viewport {
-        padding: 16px 16px 80px 16px; /* Clearance for bottom nav */
+        padding: 16px;
         height: calc(100vh - 56px);
-        overflow-y: auto;
+        flex: 0 0 auto;
+        overflow: hidden;
     }
 
     .viewport-header {
