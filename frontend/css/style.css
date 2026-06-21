@@ -1131,7 +1131,7 @@ html, body {
 
     /* Add bottom padding so last row is never hidden under the fixed bottom nav */
     .table-responsive {
-        padding-bottom: 68px;
+        padding-bottom: 120px;
     }
 
     .viewport-header {
