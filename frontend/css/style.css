@@ -565,6 +565,7 @@ html, body {
     flex: 1;
     overflow-y: auto;
     overflow-x: auto;
+    padding-bottom: 12px;
 }
 
 .db-table {
@@ -654,22 +655,30 @@ html, body {
 }
 
 .pin-row-btn.pinned {
-    color: #f59e0b; /* Golden color for pinned */
-    fill: rgba(245, 158, 11, 0.15); /* Soft inner fill */
+    color: #f59e0b;
 }
 
 .pin-row-btn.pinned:hover {
     color: #d97706;
 }
 
-/* Semi-transparent pin button unless hovered or pinned */
-.db-table tbody tr .pin-row-btn {
-    opacity: 0.3;
+/* Pin button in actions col: always visible, golden when pinned */
+.row-actions .pin-row-btn {
+    opacity: 1;
+    color: var(--text-muted);
 }
 
-.db-table tbody tr:hover .pin-row-btn,
-.db-table tbody tr .pin-row-btn.pinned {
-    opacity: 1;
+.row-actions .pin-row-btn:hover {
+    color: #f59e0b;
+    background-color: rgba(245, 158, 11, 0.1);
+}
+
+.row-actions .pin-row-btn.pinned {
+    color: #f59e0b;
+}
+
+.row-actions .pin-row-btn.pinned:hover {
+    color: #d97706;
 }
 
 /* ==========================================================================
