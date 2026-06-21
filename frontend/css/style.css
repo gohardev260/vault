@@ -637,48 +637,49 @@ html, body {
 
 .pin-row-btn {
     color: var(--text-muted);
-    transition: color 0.15s, transform 0.15s, opacity 0.15s;
+    transition: color 0.15s, transform 0.15s;
     padding: 0;
-    width: 24px;
-    height: 24px;
+    width: 32px;
+    height: 32px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
     background: transparent;
     border: none;
+    border-radius: 6px;
 }
 
 .pin-row-btn:hover {
-    color: var(--text);
-    transform: scale(1.1);
+    color: #16a34a;
+    background-color: rgba(22, 163, 74, 0.1);
 }
 
 .pin-row-btn.pinned {
-    color: #f59e0b;
+    color: #16a34a;
 }
 
 .pin-row-btn.pinned:hover {
-    color: #d97706;
+    color: #15803d;
 }
 
-/* Pin button in actions col: always visible, golden when pinned */
+/* Pin button in actions col: always visible, green when pinned */
 .row-actions .pin-row-btn {
     opacity: 1;
     color: var(--text-muted);
 }
 
 .row-actions .pin-row-btn:hover {
-    color: #f59e0b;
-    background-color: rgba(245, 158, 11, 0.1);
+    color: #16a34a;
+    background-color: rgba(22, 163, 74, 0.1);
 }
 
 .row-actions .pin-row-btn.pinned {
-    color: #f59e0b;
+    color: #16a34a;
 }
 
 .row-actions .pin-row-btn.pinned:hover {
-    color: #d97706;
+    color: #15803d;
 }
 
 /* ==========================================================================
@@ -1126,6 +1127,11 @@ html, body {
         height: calc(100vh - 56px);
         flex: 0 0 auto;
         overflow: hidden;
+    }
+
+    /* Add bottom padding so last row is never hidden under the fixed bottom nav */
+    .table-responsive {
+        padding-bottom: 68px;
     }
 
     .viewport-header {
