@@ -1,17 +1,14 @@
 // ============================================================
-//  Vault — Cloudflare Worker
-//  Full API backend: auth + password CRUD
+//  Vault — Cloudflare Worker (Supabase Auth Edition)
+//  Full API backend: auth via Supabase Auth + password CRUD
 //
 //  Env vars (set via: wrangler secret put <NAME>):
-//    JWT_SECRET       — same as your old JWT_SECRET
-//    ENCRYPTION_KEY   — same as your old ENCRYPTION_KEY
+//    ENCRYPTION_KEY   — used for Vault AES-GCM encryption
 //    SUPABASE_URL     — https://cpjqyreptnlrcdczunjg.supabase.co
-//    SUPABASE_KEY     — your service_role key
+//    SUPABASE_KEY     — your service_role key (bypasses RLS)
 //
 //  ASSETS binding comes from wrangler.toml → serves the frontend
 // ============================================================
-
-import bcrypt from 'bcryptjs';
 
 // ─── Response helpers ────────────────────────────────────────────────────────
 
@@ -22,54 +19,6 @@ const json = (data, status = 200) =>
   });
 
 const err = (msg, status = 400) => json({ detail: msg }, status);
-
-// ─── JWT (HS256 via WebCrypto — matches python-jose) ─────────────────────────
-
-const b64u = (s) =>
-  btoa(s).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
-
-const fromB64u = (s) => {
-  s = s.replace(/-/g, '+').replace(/_/g, '/');
-  while (s.length % 4) s += '=';
-  return atob(s);
-};
-
-async function signJWT(userId, secret) {
-  const header  = b64u(JSON.stringify({ alg: 'HS256', typ: 'JWT' }));
-  const payload = b64u(JSON.stringify({
-    sub: userId,
-    exp: Math.floor(Date.now() / 1000) + 2592000, // 30 days
-  }));
-  const data = `${header}.${payload}`;
-  const key = await crypto.subtle.importKey(
-    'raw', new TextEncoder().encode(secret),
-    { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']
-  );
-  const sig = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(data));
-  return `${data}.${b64u(String.fromCharCode(...new Uint8Array(sig)))}`;
-}
-
-async function verifyJWT(token, secret) {
-  try {
-    const [h, p, s] = token.split('.');
-    if (!h || !p || !s) return null;
-    const key = await crypto.subtle.importKey(
-      'raw', new TextEncoder().encode(secret),
-      { name: 'HMAC', hash: 'SHA-256' }, false, ['verify']
-    );
-    const valid = await crypto.subtle.verify(
-      'HMAC', key,
-      Uint8Array.from(fromB64u(s), (c) => c.charCodeAt(0)),
-      new TextEncoder().encode(`${h}.${p}`)
-    );
-    if (!valid) return null;
-    const claims = JSON.parse(fromB64u(p));
-    if (claims.exp < Math.floor(Date.now() / 1000)) return null;
-    return claims;
-  } catch {
-    return null;
-  }
-}
 
 // ─── AES-GCM encryption (key = SHA-256 of ENCRYPTION_KEY) ───────────────────
 
@@ -97,27 +46,74 @@ async function decryptPw(cipher, secret) {
   return new TextDecoder().decode(dec);
 }
 
-// ─── Supabase REST client ─────────────────────────────────────────────────────
+// ─── Supabase REST & Auth client ─────────────────────────────────────────────
 
-function db(env) {
-  const base = `${env.SUPABASE_URL}/rest/v1`;
-  const h = {
-    apikey:        env.SUPABASE_KEY,
+function supabase(env) {
+  const restBase = `${env.SUPABASE_URL}/rest/v1`;
+  const authBase = `${env.SUPABASE_URL}/auth/v1`;
+  
+  const commonHeaders = {
+    apikey: env.SUPABASE_KEY,
+    'Content-Type': 'application/json',
+  };
+
+  const serviceHeaders = {
+    ...commonHeaders,
     Authorization: `Bearer ${env.SUPABASE_KEY}`,
-    'Content-Type':  'application/json',
-    Prefer:          'return=representation',
   };
 
   const chk = async (r) => {
-    if (!r.ok) throw new Error(await r.text());
-    return r.json();
+    if (!r.ok) {
+      const info = await r.json().catch(() => ({ error_description: null, msg: null, error: null }));
+      const msg = info.error_description || info.msg || info.error || `Request failed with status ${r.status}`;
+      throw new Error(msg);
+    }
+    return r.status === 204 ? null : r.json();
   };
 
   return {
-    get:    (t, qs = '')    => fetch(`${base}/${t}?${qs}`, { headers: h }).then(chk),
-    post:   (t, body)       => fetch(`${base}/${t}`, { method: 'POST',   headers: h, body: JSON.stringify(body) }).then(chk),
-    patch:  (t, qs, body)   => fetch(`${base}/${t}?${qs}`, { method: 'PATCH',  headers: h, body: JSON.stringify(body) }).then(chk),
-    delete: (t, qs)         => fetch(`${base}/${t}?${qs}`, { method: 'DELETE', headers: h }).then(chk),
+    // Database requests (using service role to bypass RLS)
+    db: {
+      get:    (t, qs = '')    => fetch(`${restBase}/${t}?${qs}`, { headers: serviceHeaders }).then(chk),
+      post:   (t, body)       => fetch(`${restBase}/${t}`, { method: 'POST',   headers: { ...serviceHeaders, Prefer: 'return=representation' }, body: JSON.stringify(body) }).then(chk),
+      patch:  (t, qs, body)   => fetch(`${restBase}/${t}?${qs}`, { method: 'PATCH',  headers: { ...serviceHeaders, Prefer: 'return=representation' }, body: JSON.stringify(body) }).then(chk),
+      delete: (t, qs)         => fetch(`${restBase}/${t}?${qs}`, { method: 'DELETE', headers: serviceHeaders }).then(chk),
+    },
+    // Auth endpoints (proxies email/password signup and login)
+    auth: {
+      signUp: (email, password) => 
+        fetch(`${authBase}/signup`, {
+          method: 'POST',
+          headers: commonHeaders,
+          body: JSON.stringify({ email, password })
+        }).then(chk),
+      
+      signIn: (email, password) =>
+        fetch(`${authBase}/token?grant_type=password`, {
+          method: 'POST',
+          headers: commonHeaders,
+          body: JSON.stringify({ email, password })
+        }).then(chk),
+
+      getUser: (token) =>
+        fetch(`${authBase}/user`, {
+          method: 'GET',
+          headers: {
+            ...commonHeaders,
+            Authorization: `Bearer ${token}`
+          }
+        }).then(chk),
+
+      updateUser: (token, updates) =>
+        fetch(`${authBase}/user`, {
+          method: 'PUT',
+          headers: {
+            ...commonHeaders,
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify(updates)
+        }).then(chk),
+    }
   };
 }
 
@@ -134,11 +130,13 @@ async function getCurrentUser(request, env) {
   }
   if (!token) return null;
 
-  const claims = await verifyJWT(token, env.JWT_SECRET);
-  if (!claims?.sub) return null;
-
-  const rows = await db(env).get('users', `id=eq.${claims.sub}&limit=1`);
-  return rows[0] ?? null;
+  try {
+    const user = await supabase(env).auth.getUser(token);
+    return { id: user.id, email: user.email, token };
+  } catch (e) {
+    console.error('User auth error:', e.message);
+    return null;
+  }
 }
 
 function setCookieHeader(token) {
@@ -151,34 +149,39 @@ async function register(req, env) {
   const { email, password } = await req.json();
   if (!email || !password) return err('Email and password required');
 
-  const existing = await db(env).get('users', `email=eq.${encodeURIComponent(email)}&limit=1`);
-  if (existing.length > 0) return err('Email already registered', 400);
-
-  const password_hash = await bcrypt.hash(password, 10);
-  const users = await db(env).post('users', { email, password_hash });
-  const token = await signJWT(users[0].id, env.JWT_SECRET);
-
-  return new Response(JSON.stringify({ message: 'ok' }), {
-    status: 200,
-    headers: { 'Content-Type': 'application/json', 'Set-Cookie': setCookieHeader(token) },
-  });
+  try {
+    const res = await supabase(env).auth.signUp(email, password);
+    // Supabase can return session right away if email confirmation is off
+    const token = res.access_token;
+    
+    if (token) {
+      return new Response(JSON.stringify({ message: 'ok' }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json', 'Set-Cookie': setCookieHeader(token) },
+      });
+    }
+    
+    // If confirmation is on, user needs to check their email
+    return json({ message: 'Confirmation email sent' });
+  } catch (e) {
+    return err(e.message);
+  }
 }
 
 async function login(req, env) {
   const { email, password } = await req.json();
   if (!email || !password) return err('Email and password required');
 
-  const users = await db(env).get('users', `email=eq.${encodeURIComponent(email)}&limit=1`);
-  if (users.length === 0) return err('Invalid credentials', 401);
-
-  const valid = await bcrypt.compare(password, users[0].password_hash);
-  if (!valid) return err('Invalid credentials', 401);
-
-  const token = await signJWT(users[0].id, env.JWT_SECRET);
-  return new Response(JSON.stringify({ message: 'ok' }), {
-    status: 200,
-    headers: { 'Content-Type': 'application/json', 'Set-Cookie': setCookieHeader(token) },
-  });
+  try {
+    const res = await supabase(env).auth.signIn(email, password);
+    const token = res.access_token;
+    return new Response(JSON.stringify({ message: 'ok' }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json', 'Set-Cookie': setCookieHeader(token) },
+    });
+  } catch (e) {
+    return err(e.message, 401);
+  }
 }
 
 function logout() {
@@ -201,26 +204,30 @@ async function listPasswords(req, env) {
   const user = await getCurrentUser(req, env);
   if (!user) return err('Not authenticated', 401);
 
-  const rows = await db(env).get(
-    'saved_passwords',
-    `user_id=eq.${user.id}&order=is_pinned.desc,created_at.desc`
-  );
+  try {
+    const rows = await supabase(env).db.get(
+      'saved_passwords',
+      `user_id=eq.${user.id}&order=is_pinned.desc,created_at.desc`
+    );
 
-  const out = [];
-  for (const r of rows) {
-    let pw = '';
-    try { pw = await decryptPw(r.encrypted_password, env.ENCRYPTION_KEY); } catch {}
-    out.push({
-      id:           r.id,
-      account_name: r.account_name,
-      username:     r.username || '',
-      password:     pw,
-      created_at:   r.created_at || '',
-      updated_at:   r.updated_at || '',
-      is_pinned:    r.is_pinned,
-    });
+    const out = [];
+    for (const r of rows) {
+      let pw = '';
+      try { pw = await decryptPw(r.encrypted_password, env.ENCRYPTION_KEY); } catch {}
+      out.push({
+        id:           r.id,
+        account_name: r.account_name,
+        username:     r.username || '',
+        password:     pw,
+        created_at:   r.created_at || '',
+        updated_at:   r.updated_at || '',
+        is_pinned:    r.is_pinned,
+      });
+    }
+    return json(out);
+  } catch (e) {
+    return err(e.message);
   }
-  return json(out);
 }
 
 async function createPassword(req, env) {
@@ -230,53 +237,68 @@ async function createPassword(req, env) {
   const { account_name, username = '', password, is_pinned = false } = await req.json();
   if (!account_name || !password) return err('account_name and password are required');
 
-  const encrypted_password = await encryptPw(password, env.ENCRYPTION_KEY);
-  const rows = await db(env).post('saved_passwords', {
-    user_id: user.id, account_name, username, encrypted_password, is_pinned,
-  });
-  return json({ id: rows[0].id, message: 'saved' });
+  try {
+    const encrypted_password = await encryptPw(password, env.ENCRYPTION_KEY);
+    const rows = await supabase(env).db.post('saved_passwords', {
+      user_id: user.id, account_name, username, encrypted_password, is_pinned,
+    });
+    return json({ id: rows[0].id, message: 'saved' });
+  } catch (e) {
+    return err(e.message);
+  }
 }
 
 async function updatePassword(req, env, pid) {
   const user = await getCurrentUser(req, env);
   if (!user) return err('Not authenticated', 401);
 
-  const existing = await db(env).get('saved_passwords', `id=eq.${pid}&user_id=eq.${user.id}&limit=1`);
-  if (existing.length === 0) return err('Not found', 404);
+  try {
+    const existing = await supabase(env).db.get('saved_passwords', `id=eq.${pid}&user_id=eq.${user.id}&limit=1`);
+    if (existing.length === 0) return err('Not found', 404);
 
-  const body = await req.json();
-  const updates = {};
-  if (body.account_name !== undefined) updates.account_name = body.account_name;
-  if (body.username     !== undefined) updates.username     = body.username;
-  if (body.is_pinned    !== undefined) updates.is_pinned    = body.is_pinned;
-  if (body.password     !== undefined) updates.encrypted_password = await encryptPw(body.password, env.ENCRYPTION_KEY);
+    const body = await req.json();
+    const updates = {};
+    if (body.account_name !== undefined) updates.account_name = body.account_name;
+    if (body.username     !== undefined) updates.username     = body.username;
+    if (body.is_pinned    !== undefined) updates.is_pinned    = body.is_pinned;
+    if (body.password     !== undefined) updates.encrypted_password = await encryptPw(body.password, env.ENCRYPTION_KEY);
 
-  await db(env).patch('saved_passwords', `id=eq.${pid}&user_id=eq.${user.id}`, updates);
-  return json({ message: 'updated' });
+    await supabase(env).db.patch('saved_passwords', `id=eq.${pid}&user_id=eq.${user.id}`, updates);
+    return json({ message: 'updated' });
+  } catch (e) {
+    return err(e.message);
+  }
 }
 
 async function deletePassword(req, env, pid) {
   const user = await getCurrentUser(req, env);
   if (!user) return err('Not authenticated', 401);
 
-  const existing = await db(env).get('saved_passwords', `id=eq.${pid}&user_id=eq.${user.id}&limit=1`);
-  if (existing.length === 0) return err('Not found', 404);
+  try {
+    const existing = await supabase(env).db.get('saved_passwords', `id=eq.${pid}&user_id=eq.${user.id}&limit=1`);
+    if (existing.length === 0) return err('Not found', 404);
 
-  await db(env).delete('saved_passwords', `id=eq.${pid}&user_id=eq.${user.id}`);
-  return json({ message: 'deleted' });
+    await supabase(env).db.delete('saved_passwords', `id=eq.${pid}&user_id=eq.${user.id}`);
+    return json({ message: 'deleted' });
+  } catch (e) {
+    return err(e.message);
+  }
 }
 
 async function changePassword(req, env) {
   const user = await getCurrentUser(req, env);
   if (!user) return err('Not authenticated', 401);
 
-  const { current_password, new_password } = await req.json();
-  const valid = await bcrypt.compare(current_password, user.password_hash);
-  if (!valid) return err('Current password is wrong', 400);
+  const { new_password } = await req.json();
+  if (!new_password) return err('New password is required');
 
-  const new_hash = await bcrypt.hash(new_password, 10);
-  await db(env).patch('users', `id=eq.${user.id}`, { password_hash: new_hash });
-  return json({ message: 'changed' });
+  try {
+    // Supabase Auth handles changing the user password
+    await supabase(env).auth.updateUser(user.token, { password: new_password });
+    return json({ message: 'changed' });
+  } catch (e) {
+    return err(e.message);
+  }
 }
 
 // ─── Main export ──────────────────────────────────────────────────────────────
