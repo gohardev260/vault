@@ -6,7 +6,7 @@ compatibility_flags = ["nodejs_compat"]
 # Serve the frontend HTML/CSS/JS as static assets on the same domain
 # All /api/* requests are handled by the Worker first
 [assets]
-directory = "frontend"
+directory = "."
 binding   = "ASSETS"
 
 # ── Secrets (set each one with: wrangler secret put <NAME>) ────────────────

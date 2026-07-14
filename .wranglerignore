@@ -1,0 +1,13 @@
+# Exclude backend files and configs from the static assets upload
+src/
+supabase/
+package.json
+package-lock.json
+wrangler.toml
+.git/
+.gitignore
+.wrangler/
+node_modules/
+.deprecated-worker-folder/
+README.md
+*.py

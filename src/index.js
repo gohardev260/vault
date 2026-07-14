@@ -29,8 +29,8 @@ async function getAESKey(secret) {
 
 async function encryptPw(plain, secret) {
   const key = await getAESKey(secret);
-  const iv  = crypto.getRandomValues(new Uint8Array(12));
-  const ct  = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, new TextEncoder().encode(plain));
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const ct = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, new TextEncoder().encode(plain));
   const out = new Uint8Array(12 + ct.byteLength);
   out.set(iv);
   out.set(new Uint8Array(ct), 12);
@@ -38,11 +38,11 @@ async function encryptPw(plain, secret) {
 }
 
 async function decryptPw(cipher, secret) {
-  const key  = await getAESKey(secret);
+  const key = await getAESKey(secret);
   const data = Uint8Array.from(atob(cipher), (c) => c.charCodeAt(0));
-  const iv   = data.slice(0, 12);
-  const ct   = data.slice(12);
-  const dec  = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, ct);
+  const iv = data.slice(0, 12);
+  const ct = data.slice(12);
+  const dec = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, ct);
   return new TextDecoder().decode(dec);
 }
 
@@ -60,7 +60,7 @@ function supabase(env) {
   const url = env.SUPABASE_URL.startsWith('http') ? env.SUPABASE_URL : `https://${env.SUPABASE_URL}`;
   const restBase = `${url}/rest/v1`;
   const authBase = `${url}/auth/v1`;
-  
+
   const commonHeaders = {
     apikey: env.SUPABASE_KEY,
     'Content-Type': 'application/json',
@@ -83,20 +83,20 @@ function supabase(env) {
   return {
     // Database requests (using service role to bypass RLS)
     db: {
-      get:    (t, qs = '')    => fetch(`${restBase}/${t}?${qs}`, { headers: serviceHeaders }).then(chk),
-      post:   (t, body)       => fetch(`${restBase}/${t}`, { method: 'POST',   headers: { ...serviceHeaders, Prefer: 'return=representation' }, body: JSON.stringify(body) }).then(chk),
-      patch:  (t, qs, body)   => fetch(`${restBase}/${t}?${qs}`, { method: 'PATCH',  headers: { ...serviceHeaders, Prefer: 'return=representation' }, body: JSON.stringify(body) }).then(chk),
-      delete: (t, qs)         => fetch(`${restBase}/${t}?${qs}`, { method: 'DELETE', headers: serviceHeaders }).then(chk),
+      get: (t, qs = '') => fetch(`${restBase}/${t}?${qs}`, { headers: serviceHeaders }).then(chk),
+      post: (t, body) => fetch(`${restBase}/${t}`, { method: 'POST', headers: { ...serviceHeaders, Prefer: 'return=representation' }, body: JSON.stringify(body) }).then(chk),
+      patch: (t, qs, body) => fetch(`${restBase}/${t}?${qs}`, { method: 'PATCH', headers: { ...serviceHeaders, Prefer: 'return=representation' }, body: JSON.stringify(body) }).then(chk),
+      delete: (t, qs) => fetch(`${restBase}/${t}?${qs}`, { method: 'DELETE', headers: serviceHeaders }).then(chk),
     },
     // Auth endpoints (proxies email/password signup and login)
     auth: {
-      signUp: (email, password) => 
+      signUp: (email, password) =>
         fetch(`${authBase}/signup`, {
           method: 'POST',
           headers: serviceHeaders,
           body: JSON.stringify({ email, password })
         }).then(chk),
-      
+
       signIn: (email, password) =>
         fetch(`${authBase}/token?grant_type=password`, {
           method: 'POST',
@@ -161,14 +161,14 @@ async function register(req, env) {
   try {
     const res = await supabase(env).auth.signUp(email, password);
     const token = res.access_token || res.session?.access_token;
-    
+
     if (token) {
       return new Response(JSON.stringify({ message: 'ok' }), {
         status: 200,
         headers: { 'Content-Type': 'application/json', 'Set-Cookie': setCookieHeader(token) },
       });
     }
-    
+
     return json({ message: 'Confirmation email sent' });
   } catch (e) {
     console.error('Supabase SignUp Error:', e.message);
@@ -222,15 +222,15 @@ async function listPasswords(req, env) {
     const out = [];
     for (const r of rows) {
       let pw = '';
-      try { pw = await decryptPw(r.encrypted_password, env.ENCRYPTION_KEY); } catch {}
+      try { pw = await decryptPw(r.encrypted_password, env.ENCRYPTION_KEY); } catch { }
       out.push({
-        id:           r.id,
+        id: r.id,
         account_name: r.account_name,
-        username:     r.username || '',
-        password:     pw,
-        created_at:   r.created_at || '',
-        updated_at:   r.updated_at || '',
-        is_pinned:    r.is_pinned,
+        username: r.username || '',
+        password: pw,
+        created_at: r.created_at || '',
+        updated_at: r.updated_at || '',
+        is_pinned: r.is_pinned,
       });
     }
     return json(out);
@@ -268,9 +268,9 @@ async function updatePassword(req, env, pid) {
     const body = await req.json();
     const updates = {};
     if (body.account_name !== undefined) updates.account_name = body.account_name;
-    if (body.username     !== undefined) updates.username     = body.username;
-    if (body.is_pinned    !== undefined) updates.is_pinned    = body.is_pinned;
-    if (body.password     !== undefined) updates.encrypted_password = await encryptPw(body.password, env.ENCRYPTION_KEY);
+    if (body.username !== undefined) updates.username = body.username;
+    if (body.is_pinned !== undefined) updates.is_pinned = body.is_pinned;
+    if (body.password !== undefined) updates.encrypted_password = await encryptPw(body.password, env.ENCRYPTION_KEY);
 
     await supabase(env).db.patch('saved_passwords', `id=eq.${pid}&user_id=eq.${user.id}`, updates);
     return json({ message: 'updated' });
@@ -323,16 +323,16 @@ export default {
     // API routing
     if (pathname.startsWith('/api/')) {
       try {
-        if (pathname === '/api/auth/register'           && method === 'POST')   return register(request, env);
-        if (pathname === '/api/auth/login'              && method === 'POST')   return login(request, env);
-        if (pathname === '/api/auth/logout'             && method === 'POST')   return logout();
-        if (pathname === '/api/auth/me'                 && method === 'GET')    return me(request, env);
-        if (pathname === '/api/passwords'               && method === 'GET')    return listPasswords(request, env);
-        if (pathname === '/api/passwords'               && method === 'POST')   return createPassword(request, env);
+        if (pathname === '/api/auth/register' && method === 'POST') return register(request, env);
+        if (pathname === '/api/auth/login' && method === 'POST') return login(request, env);
+        if (pathname === '/api/auth/logout' && method === 'POST') return logout();
+        if (pathname === '/api/auth/me' && method === 'GET') return me(request, env);
+        if (pathname === '/api/passwords' && method === 'GET') return listPasswords(request, env);
+        if (pathname === '/api/passwords' && method === 'POST') return createPassword(request, env);
         if (pathname === '/api/settings/change-password' && method === 'POST') return changePassword(request, env);
 
         const m = pathname.match(/^\/api\/passwords\/([^/]+)$/);
-        if (m && method === 'PUT')    return updatePassword(request, env, m[1]);
+        if (m && method === 'PUT') return updatePassword(request, env, m[1]);
         if (m && method === 'DELETE') return deletePassword(request, env, m[1]);
 
         return json({ detail: 'Not found' }, 404);
