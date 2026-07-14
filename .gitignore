@@ -32,4 +32,7 @@ package-lock.json
 .dev.vars
 .wrangler/
 dist/
+worker/
+.deprecated-worker-folder/
+
 
