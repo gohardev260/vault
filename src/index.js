@@ -93,14 +93,14 @@ function supabase(env) {
       signUp: (email, password) => 
         fetch(`${authBase}/signup`, {
           method: 'POST',
-          headers: commonHeaders,
+          headers: serviceHeaders,
           body: JSON.stringify({ email, password })
         }).then(chk),
       
       signIn: (email, password) =>
         fetch(`${authBase}/token?grant_type=password`, {
           method: 'POST',
-          headers: commonHeaders,
+          headers: serviceHeaders,
           body: JSON.stringify({ email, password })
         }).then(chk),
 
