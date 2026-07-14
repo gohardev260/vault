@@ -1,548 +1,730 @@
-/* ============================================
-   Vault Dashboard — Clean JavaScript
-   ============================================ */
+// js/app.js
+// Main Application Controller for Vault Password Manager Dashboard
 
-let passwords = [];
-let editingId = null;
+(async function() {
+    /* ---------- Supabase Credentials Setup ---------- */
+    let supabaseUrl = window.SUPABASE_URL;
+    let supabaseKey = window.SUPABASE_ANON_KEY;
 
-/* ---------- Elements ---------- */
-const pwTableBody   = document.getElementById('pw-table-body');
-const searchInput   = document.getElementById('search-input');
-const formTitle     = document.getElementById('form-title');
-const pwForm        = document.getElementById('pw-form');
-const editIdField   = document.getElementById('edit-id');
-const nameInput     = document.getElementById('account-name');
-const usernameInput = document.getElementById('account-username');
-const pwInput       = document.getElementById('account-pw');
-const pinnedInput   = document.getElementById('account-pinned');
-const saveBtn       = document.getElementById('save-btn');
-const cancelBtn     = document.getElementById('cancel-btn');
-const userEmail     = document.getElementById('user-email');
-const toastContainer = document.getElementById('toast-container');
+    const IS_PLACEHOLDER_URL = !supabaseUrl || supabaseUrl === "YOUR_SUPABASE_URL" || supabaseUrl.trim() === "";
+    const IS_PLACEHOLDER_KEY = !supabaseKey || supabaseKey === "YOUR_SUPABASE_ANON_KEY" || supabaseKey.trim() === "";
 
-// Modal Elements
-const pwModal       = document.getElementById('pw-modal');
-const addPwBtn      = document.getElementById('add-pw-btn');
-const closeModalBtn = document.getElementById('close-modal-btn');
+    if (IS_PLACEHOLDER_URL || IS_PLACEHOLDER_KEY) {
+        supabaseUrl = localStorage.getItem("vault_supabase_url");
+        supabaseKey = localStorage.getItem("vault_supabase_anon_key");
+    }
 
-// Generator Elements
-const genLen        = document.getElementById('gen-len');
-const genLenVal     = document.getElementById('gen-len-val');
-const genUpper      = document.getElementById('gen-upper');
-const genLower      = document.getElementById('gen-lower');
-const genNums       = document.getElementById('gen-nums');
-const genSyms       = document.getElementById('gen-syms');
-const fillGenBtn    = document.getElementById('fill-gen-btn');
-const strengthFill  = document.getElementById('strength-fill');
-const strengthLabel = document.getElementById('strength-label');
-const togglePwVis   = document.getElementById('toggle-pw-vis');
-const eyeOpen       = document.getElementById('eye-open');
-const eyeClosed     = document.getElementById('eye-closed');
+    let supabase = null;
+    const setupModal = document.getElementById('setup-modal');
+    const setupForm = document.getElementById('setup-form');
 
-/* ---------- Init ---------- */
-document.addEventListener('DOMContentLoaded', async () => {
-    try {
-        const res = await fetch('/api/auth/me');
-        if (!res.ok) throw new Error();
-        const data = await res.json();
-        userEmail.textContent = data.email;
-    } catch {
-        window.location.href = '/';
+    function initSupabase() {
+        if (supabaseUrl && supabaseKey && supabaseUrl !== "YOUR_SUPABASE_URL" && supabaseKey !== "YOUR_SUPABASE_ANON_KEY") {
+            try {
+                supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+                return true;
+            } catch (e) {
+                console.error("Failed to initialize Supabase client", e);
+                return false;
+            }
+        }
+        return false;
+    }
+
+    // Show setup modal if not configured
+    if (!initSupabase()) {
+        if (setupModal) {
+            setupModal.classList.add('active');
+            setupForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const urlInput = document.getElementById('setup-url').value.trim();
+                const keyInput = document.getElementById('setup-key').value.trim();
+                localStorage.setItem("vault_supabase_url", urlInput);
+                localStorage.setItem("vault_supabase_anon_key", keyInput);
+                window.location.reload();
+            });
+        }
+        return; // Halt further initialization
+    }
+
+    /* ---------- State Variables ---------- */
+    let session = null;
+    let cryptoKey = null;
+    let passwordsList = []; // Stores the decrypted password entries in memory
+
+    /* ---------- Authenticate Session ---------- */
+    const { data: { session: currentSession } } = await supabase.auth.getSession();
+    session = currentSession;
+
+    if (!session) {
+        window.location.href = 'index.html';
         return;
     }
 
-    await loadPasswords();
-    setupTabs();
-    setupGenerator();
-    setupForm();
-    setupSettings();
-    setupModalEvents();
+    // Check if the cryptography key exists in sessionStorage
+    const b64Key = sessionStorage.getItem('vault_key');
+    if (!b64Key) {
+        // If session key is lost, sign out and redirect to log in again
+        await supabase.auth.signOut();
+        window.location.href = 'index.html';
+        return;
+    }
 
-    document.querySelectorAll('.logout-btn').forEach(btn => {
+    try {
+        cryptoKey = await window.VaultCrypto.importKeyFromBase64(b64Key);
+    } catch (e) {
+        console.error("Failed to import cryptography key", e);
+        await supabase.auth.signOut();
+        window.location.href = 'index.html';
+        return;
+    }
+
+    // Listen for sign-out events
+    supabase.auth.onAuthStateChange((event, newSession) => {
+        if (event === 'SIGNED_OUT' || !newSession) {
+            sessionStorage.removeItem('vault_key');
+            window.location.href = 'index.html';
+        }
+    });
+
+    /* ---------- UI Elements ---------- */
+    const toastContainer = document.getElementById('toast-container');
+    const sidebar = document.getElementById('sidebar');
+    const sidebarTabs = document.querySelectorAll('.sidebar-tab');
+    const sidebarProfileBtn = document.getElementById('sidebar-profile-btn');
+    const panels = document.querySelectorAll('.panel');
+
+    // Password Elements
+    const pwTableBody = document.getElementById('pw-table-body');
+    const searchInput = document.getElementById('search-input');
+    const addPwBtn = document.getElementById('add-pw-btn');
+    const logoutBtns = document.querySelectorAll('.logout-btn');
+
+    // Modal Elements
+    const pwModal = document.getElementById('pw-modal');
+    const pwForm = document.getElementById('pw-form');
+    const formTitle = document.getElementById('form-title');
+    const closeModalBtn = document.getElementById('close-modal-btn');
+    const cancelBtn = document.getElementById('cancel-btn');
+    const editIdInput = document.getElementById('edit-id');
+    const accountNameInput = document.getElementById('account-name');
+    const accountUsernameInput = document.getElementById('account-username');
+    const accountPwInput = document.getElementById('account-pw');
+    const togglePwVisBtn = document.getElementById('toggle-pw-vis');
+    const fillGenBtn = document.getElementById('fill-gen-btn');
+
+    // Generator Elements
+    const genLenInput = document.getElementById('gen-len');
+    const genLenVal = document.getElementById('gen-len-val');
+    const genUpper = document.getElementById('gen-upper');
+    const genLower = document.getElementById('gen-lower');
+    const genNums = document.getElementById('gen-nums');
+    const genSyms = document.getElementById('gen-syms');
+    const strengthFill = document.getElementById('strength-fill');
+    const strengthLabel = document.getElementById('strength-label');
+
+    // Profile Elements
+    const userEmailDisplay = document.getElementById('user-email');
+    const sidebarEmailDisplay = document.getElementById('sidebar-user-email');
+    const changePwForm = document.getElementById('change-pw-form');
+    const settingsSubmitBtn = document.getElementById('settings-submit');
+    
+
+    /* ---------- Profile Info Initialization ---------- */
+    userEmailDisplay.textContent = session.user.email;
+    if (sidebarEmailDisplay) {
+        sidebarEmailDisplay.textContent = session.user.email;
+    }
+
+
+    /* ---------- Tab Navigation ---------- */
+    function switchTab(tabId) {
+        // Deactivate all tabs and panels
+        sidebarTabs.forEach(tab => tab.classList.remove('active'));
+        if (sidebarProfileBtn) sidebarProfileBtn.classList.remove('active');
+        panels.forEach(panel => panel.classList.remove('active'));
+
+        // Activate matching tab and panel
+        if (tabId === 'profile') {
+            if (sidebarProfileBtn) sidebarProfileBtn.classList.add('active');
+            // Select profile tab button as active if it exists
+            const profileTabBtn = document.querySelector('.sidebar-tab[data-tab="profile"]');
+            if (profileTabBtn) profileTabBtn.classList.add('active');
+            document.getElementById('panel-profile').classList.add('active');
+        } else {
+            const activeTab = document.querySelector(`.sidebar-tab[data-tab="${tabId}"]`);
+            if (activeTab) activeTab.classList.add('active');
+            document.getElementById(`panel-${tabId}`).classList.add('active');
+        }
+    }
+
+    sidebarTabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            switchTab(tab.getAttribute('data-tab'));
+        });
+    });
+
+    if (sidebarProfileBtn) {
+        sidebarProfileBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            switchTab('profile');
+        });
+    }
+
+    /* ---------- Toast System ---------- */
+    function showToast(title, desc, type) {
+        const toast = document.createElement('div');
+        toast.className = 'toast';
+
+        let iconSvg = '';
+        if (type === 'success') {
+            iconSvg = `<svg class="toast-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+        } else if (type === 'error') {
+            iconSvg = `<svg class="toast-icon toast-icon-error" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>`;
+        } else {
+            iconSvg = `<svg class="toast-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>`;
+        }
+
+        toast.innerHTML = `
+            ${iconSvg}
+            <div class="toast-body">
+                <div class="toast-title">${title}</div>
+                <div class="toast-desc">${desc}</div>
+            </div>
+            <button class="toast-close" aria-label="Close">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+        `;
+
+        toastContainer.appendChild(toast);
+
+        const dismiss = () => { toast.remove(); };
+        setTimeout(dismiss, 4000);
+        toast.querySelector('.toast-close').addEventListener('click', dismiss);
+    }
+
+    /* ---------- Logout Flow ---------- */
+    logoutBtns.forEach(btn => {
         btn.addEventListener('click', async () => {
             try {
-                await fetch('/api/auth/logout', { method: 'POST' });
-                showToast('Signed Out', 'You have successfully logged out.', 'success');
-                setTimeout(() => { window.location.href = '/'; }, 800);
-            } catch {
-                window.location.href = '/';
+                await supabase.auth.signOut();
+            } catch (err) {
+                showToast('Logout Error', err.message, 'error');
             }
         });
     });
-});
 
-/* ---------- Tabs ---------- */
-function setupTabs() {
-    document.querySelectorAll('.sidebar-nav .sidebar-tab').forEach(btn => {
-        btn.addEventListener('click', () => {
-            document.querySelectorAll('.sidebar-nav .sidebar-tab').forEach(b => b.classList.remove('active'));
-            document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-            btn.classList.add('active');
-            document.getElementById('panel-' + btn.dataset.tab).classList.add('active');
-        });
-    });
-}
+    /* ---------- CRUD: Fetch & Decrypt Passwords ---------- */
+    async function fetchPasswords() {
+        try {
+            const { data, error } = await supabase
+                .from('passwords')
+                .select('*')
+                .order('pinned', { ascending: false })
+                .order('updated_at', { ascending: false });
 
-/* ---------- Load Passwords ---------- */
-async function loadPasswords() {
-    try {
-        const res = await fetch('/api/passwords');
-        if (!res.ok) throw new Error();
-        passwords = await res.json();
-    } catch {
-        passwords = [];
+            if (error) throw error;
+
+            passwordsList = [];
+            for (let item of data) {
+                // Decrypt password string client-side
+                const decryptedValue = await window.VaultCrypto.decrypt(item.password, item.iv, cryptoKey);
+                passwordsList.push({
+                    ...item,
+                    decryptedPassword: decryptedValue
+                });
+            }
+
+            renderPasswords(passwordsList);
+        } catch (err) {
+            console.error("Fetch Error:", err);
+            showToast('Database Error', 'Could not load credentials: ' + err.message, 'error');
+        }
     }
-    renderTable();
-}
 
-/* ---------- Render Table ---------- */
-function renderTable() {
-    const query = searchInput.value.toLowerCase().trim();
-    const filtered = passwords.filter(p => 
-        p.account_name.toLowerCase().includes(query) || 
-        (p.username && p.username.toLowerCase().includes(query))
-    );
+    /* ---------- CRUD: Render Password Table ---------- */
+    function renderPasswords(items) {
+        pwTableBody.innerHTML = '';
 
-    if (filtered.length === 0) {
-        pwTableBody.innerHTML = `
-            <tr>
-                <td colspan="5" class="text-center">
-                    <div class="empty-state">
-                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-                            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-                        </svg>
-                        <span>${passwords.length === 0 ? 'No credentials saved yet' : 'No matching results'}</span>
+        if (items.length === 0) {
+            pwTableBody.innerHTML = `
+                <tr>
+                    <td colspan="5">
+                        <div class="empty-state">
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                            </svg>
+                            <span>No password records found. Click 'Add Password' to start.</span>
+                        </div>
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
+        items.forEach(item => {
+            const tr = document.createElement('tr');
+            
+            // Format updated timestamp
+            const dateObj = new Date(item.updated_at);
+            const dateStr = dateObj.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+
+            tr.innerHTML = `
+                <td>
+                    <div class="col-account-name">
+                        <button class="pin-row-btn ${item.pinned ? 'pinned' : ''}" data-id="${item.id}" data-pinned="${item.pinned}" title="${item.pinned ? 'Unpin' : 'Pin'}">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="12" y1="17" x2="12" y2="22"></line>
+                                <path d="M5 17h14v-1.76a2 2 0 0 0-.44-1.24l-2.78-3.48A2 2 0 0 1 15 9.28V5a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v4.28a2 2 0 0 1-.78 1.24l-2.78 3.48A2 2 0 0 0 5 15.24V17Z"></path>
+                            </svg>
+                        </button>
+                        <span class="font-medium">${escapeHTML(item.account_name)}</span>
                     </div>
                 </td>
-            </tr>`;
-        return;
+                <td><span class="text-sec">${escapeHTML(item.username || '—')}</span></td>
+                <td>
+                    <div class="col-pw-field">
+                        <span class="masked-pw" data-id="${item.id}">••••••••</span>
+                        <button type="button" class="btn-icon toggle-row-pw-btn" data-id="${item.id}" title="Show Password">
+                            <svg class="eye-open" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
+                                <circle cx="12" cy="12" r="3"></circle>
+                            </svg>
+                        </button>
+                        <button type="button" class="btn-icon copy-row-pw-btn" data-id="${item.id}" title="Copy to Clipboard">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </td>
+                <td><span class="text-sec">${dateStr}</span></td>
+                <td class="text-right">
+                    <div class="row-actions">
+                        <button class="btn-icon edit-row-btn" data-id="${item.id}" title="Edit Credentials">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M12 20h9"></path>
+                                <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path>
+                            </svg>
+                        </button>
+                        <button class="btn-icon btn-icon-danger delete-row-btn" data-id="${item.id}" title="Delete Record">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="3 6 5 6 21 6"></polyline>
+                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                <line x1="10" y1="11" x2="10" y2="17"></line>
+                                <line x1="14" y1="11" x2="14" y2="17"></line>
+                            </svg>
+                        </button>
+                    </div>
+                </td>
+            `;
+
+            pwTableBody.appendChild(tr);
+        });
+
+        // Add Event Listeners for Dynamic Row Elements
+        addTableActionListeners();
     }
 
-    pwTableBody.innerHTML = filtered.map(p => `
-        <tr data-id="${p.id}">
-            <td class="font-medium">
-                <div class="col-account-name">
-                    <span class="account-name-text">${esc(p.account_name)}</span>
-                </div>
-            </td>
-            <td>${esc(p.username || '—')}</td>
-            <td>
-                <div class="col-pw-field">
-                    <span class="masked-pw" id="masked-${p.id}">••••••••</span>
-                    <span class="plain-pw" id="plain-${p.id}" style="display:none">${esc(p.password)}</span>
-                    <button class="btn-icon view-row-btn" data-id="${p.id}" title="Toggle Password Visibility">
-                        <svg class="eye-open" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
-                            <circle cx="12" cy="12" r="3"></circle>
-                        </svg>
-                        <svg class="eye-closed" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none">
+    /* ---------- Table Row Actions ---------- */
+    function addTableActionListeners() {
+        // Pin/Unpin Actions
+        document.querySelectorAll('.pin-row-btn').forEach(btn => {
+            btn.addEventListener('click', async () => {
+                const id = btn.getAttribute('data-id');
+                const isPinned = btn.getAttribute('data-pinned') === 'true';
+                try {
+                    const { error } = await supabase
+                        .from('passwords')
+                        .update({ pinned: !isPinned })
+                        .eq('id', id);
+                    if (error) throw error;
+                    fetchPasswords();
+                } catch (err) {
+                    showToast('Pinning Error', err.message, 'error');
+                }
+            });
+        });
+
+        // Password Show/Hide Toggle
+        document.querySelectorAll('.toggle-row-pw-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const id = btn.getAttribute('data-id');
+                const maskedEl = document.querySelector(`.masked-pw[data-id="${id}"]`);
+                const item = passwordsList.find(x => x.id === id);
+
+                if (!item) return;
+
+                if (maskedEl.textContent === '••••••••') {
+                    maskedEl.textContent = item.decryptedPassword;
+                    maskedEl.className = 'plain-pw';
+                    btn.innerHTML = `
+                        <svg class="eye-closed" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"></path>
                             <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"></path>
                             <path d="M6.61 6.61A13.52 13.52 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"></path>
                             <line x1="2" y1="2" x2="22" y2="22"></line>
                         </svg>
-                    </button>
-                    <button class="btn-icon copy-row-btn" data-pw="${esc(p.password)}" title="Copy Password">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-                        </svg>
-                    </button>
-                </div>
-            </td>
-            <td class="text-sec">${formatDate(p.updated_at || p.created_at)}</td>
-            <td class="text-right">
-                <div class="row-actions">
-                    <button class="btn-icon pin-row-btn ${p.is_pinned ? 'pinned' : ''}" data-id="${p.id}" title="${p.is_pinned ? 'Unpin' : 'Pin to top'}">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <line x1="12" y1="17" x2="12" y2="22"></line>
-                            <path d="M5 17h14v-1.76a2 2 0 0 0-.44-1.24l-2.32-2.9A2 2 0 0 1 15.8 9.86V4a1 1 0 0 0-1-1H9.2a1 1 0 0 0-1 1v5.86a2 2 0 0 1-.44 1.24l-2.32 2.9a2 2 0 0 0-.44 1.24z"></path>
-                        </svg>
-                    </button>
-                    <button class="btn-icon edit-row-btn" data-id="${p.id}" title="Edit Entry">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                            <path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                        </svg>
-                    </button>
-                    <button class="btn-icon btn-icon-danger del-row-btn" data-id="${p.id}" title="Delete Entry">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <polyline points="3 6 5 6 21 6"></polyline>
-                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                            <line x1="10" y1="11" x2="10" y2="17"></line>
-                            <line x1="14" y1="11" x2="14" y2="17"></line>
-                        </svg>
-                    </button>
-                </div>
-            </td>
-        </tr>
-    `).join('');
-
-    // Toggle Pin Status
-    pwTableBody.querySelectorAll('.pin-row-btn').forEach(btn => {
-        btn.addEventListener('click', async (e) => {
-            e.stopPropagation();
-            const id = btn.dataset.id;
-            const entry = passwords.find(p => p.id === id);
-            if (!entry) return;
-            const newPinned = !entry.is_pinned;
-            try {
-                const res = await fetch(`/api/passwords/${id}`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ is_pinned: newPinned })
-                });
-                if (res.ok) {
-                    await loadPasswords();
-                    showToast(
-                        newPinned ? 'Pinned' : 'Unpinned',
-                        newPinned ? 'Password pinned to top.' : 'Password unpinned.',
-                        'success'
-                    );
+                    `;
+                    btn.title = "Hide Password";
                 } else {
-                    showToast('Error', 'Failed to update pin status.', 'error');
+                    maskedEl.textContent = '••••••••';
+                    maskedEl.className = 'masked-pw';
+                    btn.innerHTML = `
+                        <svg class="eye-open" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
+                            <circle cx="12" cy="12" r="3"></circle>
+                        </svg>
+                    `;
+                    btn.title = "Show Password";
                 }
-            } catch (err) {
-                showToast('Error', err.message, 'error');
-            }
+            });
         });
-    });
 
-    // Toggle Visibility
-    pwTableBody.querySelectorAll('.view-row-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            const id = btn.dataset.id;
-            const masked = document.getElementById(`masked-${id}`);
-            const plain = document.getElementById(`plain-${id}`);
-            const openSvg = btn.querySelector('.eye-open');
-            const closedSvg = btn.querySelector('.eye-closed');
-            
-            const isHidden = plain.style.display === 'none';
-            plain.style.display = isHidden ? 'block' : 'none';
-            masked.style.display = isHidden ? 'none' : 'block';
-            openSvg.style.display = isHidden ? 'none' : 'block';
-            closedSvg.style.display = isHidden ? 'block' : 'none';
-        });
-    });
-
-    // Copy
-    pwTableBody.querySelectorAll('.copy-row-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            navigator.clipboard.writeText(btn.dataset.pw);
-            showToast('Copied', 'Password copied to clipboard.', 'success');
-        });
-    });
-
-    // Edit
-    pwTableBody.querySelectorAll('.edit-row-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            startEdit(btn.dataset.id);
-        });
-    });
-
-    // Delete
-    pwTableBody.querySelectorAll('.del-row-btn').forEach(btn => {
-        btn.addEventListener('click', async (e) => {
-            e.stopPropagation();
-            if (!confirm('Delete this credential permanently?')) return;
-            try {
-                const res = await fetch(`/api/passwords/${btn.dataset.id}`, { method: 'DELETE' });
-                if (res.ok) {
-                    await loadPasswords();
-                    showToast('Deleted', 'Credential removed from vault.', 'success');
-                } else {
-                    showToast('Error', 'Failed to delete credential.', 'error');
+        // Clipboard Copy Action
+        document.querySelectorAll('.copy-row-pw-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const id = btn.getAttribute('data-id');
+                const item = passwordsList.find(x => x.id === id);
+                if (item) {
+                    navigator.clipboard.writeText(item.decryptedPassword).then(() => {
+                        showToast('Copied', 'Password copied to clipboard.', 'success');
+                    }).catch(e => {
+                        showToast('Copy Error', 'Clipboard access denied.', 'error');
+                    });
                 }
-            } catch (err) {
-                showToast('Error', err.message, 'error');
-            }
+            });
         });
-    });
-}
 
-/* ---------- Form ---------- */
-function setupForm() {
-    pwForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const name = nameInput.value.trim();
-        const username = usernameInput.value.trim();
-        const pw = pwInput.value;
-        if (!name || !pw) return;
-
-        saveBtn.disabled = true;
-        const originalText = saveBtn.textContent;
-        saveBtn.textContent = 'Saving...';
-
-        try {
-            let res;
-            if (editingId) {
-                res = await fetch(`/api/passwords/${editingId}`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ account_name: name, username: username, password: pw })
-                });
-            } else {
-                res = await fetch('/api/passwords', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ account_name: name, username: username, password: pw })
-                });
-            }
-
-            if (!res.ok) {
-                const err = await res.json();
-                throw new Error(err.detail || 'Request failed');
-            }
-
-            closeModal();
-            resetForm();
-            await loadPasswords();
-            showToast(
-                editingId ? 'Updated' : 'Saved',
-                editingId ? 'Credential updated successfully.' : 'New credential saved.',
-                'success'
-            );
-        } catch (err) {
-            showToast('Error', err.message, 'error');
-        } finally {
-            saveBtn.disabled = false;
-            saveBtn.textContent = originalText;
-        }
-    });
-
-    searchInput.addEventListener('input', renderTable);
-
-    // Toggle password visibility in modal
-    togglePwVis.addEventListener('click', () => {
-        const isHidden = pwInput.type === 'password';
-        pwInput.type = isHidden ? 'text' : 'password';
-        eyeOpen.style.display = isHidden ? 'none' : 'block';
-        eyeClosed.style.display = isHidden ? 'block' : 'none';
-    });
-}
-
-function startEdit(id) {
-    const entry = passwords.find(p => p.id === id);
-    if (!entry) return;
-
-    editingId = id;
-    formTitle.textContent = 'Edit Password';
-    nameInput.value = entry.account_name;
-    usernameInput.value = entry.username || '';
-    pwInput.value = entry.password;
-    pwInput.type = 'password';
-    editIdField.value = id;
-    eyeOpen.style.display = 'block';
-    eyeClosed.style.display = 'none';
-    saveBtn.textContent = 'Update';
-
-    openModal();
-    updateStrength();
-}
-
-function resetForm() {
-    editingId = null;
-    pwForm.reset();
-    editIdField.value = '';
-    formTitle.textContent = 'Add Password';
-    saveBtn.textContent = 'Save';
-    pwInput.type = 'password';
-    eyeOpen.style.display = 'block';
-    eyeClosed.style.display = 'none';
-    updateStrength();
-}
-
-/* ---------- Modal Logic ---------- */
-function setupModalEvents() {
-    addPwBtn.addEventListener('click', () => {
-        resetForm();
-        openModal();
-    });
-
-    closeModalBtn.addEventListener('click', closeModal);
-    cancelBtn.addEventListener('click', closeModal);
-    
-    // Close modal on click overlay
-    pwModal.addEventListener('click', (e) => {
-        if (e.target === pwModal) {
-            closeModal();
-        }
-    });
-}
-
-function openModal() {
-    pwModal.classList.add('active');
-}
-
-function closeModal() {
-    pwModal.classList.remove('active');
-}
-
-/* ---------- Generator ---------- */
-function setupGenerator() {
-    genLen.addEventListener('input', () => {
-        genLenVal.textContent = genLen.value;
-        updateStrength();
-    });
-
-    [genUpper, genLower, genNums, genSyms].forEach(cb => {
-        cb.addEventListener('change', updateStrength);
-    });
-
-    fillGenBtn.addEventListener('click', () => {
-        pwInput.value = generate();
-        pwInput.type = 'text';
-        eyeOpen.style.display = 'none';
-        eyeClosed.style.display = 'block';
-        updateStrength();
-        showToast('Generated', 'Secure password loaded into field.', 'info');
-    });
-
-    updateStrength();
-}
-
-function generate() {
-    const len = parseInt(genLen.value);
-    let chars = '';
-    if (genUpper.checked) chars += 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-    if (genLower.checked) chars += 'abcdefghijklmnopqrstuvwxyz';
-    if (genNums.checked)  chars += '0123456789';
-    if (genSyms.checked)  chars += '!@#$%^&*()_+-=[]{}|;:,.<>?';
-    if (!chars) chars = 'abcdefghijklmnopqrstuvwxyz';
-
-    const arr = new Uint32Array(len);
-    crypto.getRandomValues(arr);
-    return Array.from(arr, v => chars[v % chars.length]).join('');
-}
-
-function updateStrength() {
-    let poolSize = 0;
-    if (genUpper.checked) poolSize += 26;
-    if (genLower.checked) poolSize += 26;
-    if (genNums.checked)  poolSize += 10;
-    if (genSyms.checked)  poolSize += 27;
-    if (poolSize === 0) poolSize = 26;
-
-    const len = parseInt(genLen.value);
-    const entropy = Math.floor(len * Math.log2(poolSize));
-
-    let label, color, pct;
-    if (entropy < 40)      { label = 'Weak';       color = '#e11d48'; pct = 20; }
-    else if (entropy < 60) { label = 'Fair';       color = '#f59e0b'; pct = 40; }
-    else if (entropy < 80) { label = 'Good';       color = '#84cc16'; pct = 60; }
-    else if (entropy < 100){ label = 'Strong';     color = '#10b981'; pct = 80; }
-    else                   { label = 'Excellent';  color = '#059669'; pct = 100; }
-
-    strengthFill.style.width = pct + '%';
-    strengthFill.style.backgroundColor = color;
-    strengthLabel.textContent = label;
-    strengthLabel.style.color = color;
-}
-
-/* ---------- Settings ---------- */
-function setupSettings() {
-    const form = document.getElementById('change-pw-form');
-    const submitBtn = document.getElementById('settings-submit');
-
-    const toggleBtns = form.querySelectorAll('.toggle-settings-pw');
-    toggleBtns.forEach(btn => {
-        btn.addEventListener('click', () => {
-            const targetId = btn.dataset.target;
-            const input = document.getElementById(targetId);
-            const eyeOpen = btn.querySelector('.eye-open');
-            const eyeClosed = btn.querySelector('.eye-closed');
-
-            const isHidden = input.type === 'password';
-            input.type = isHidden ? 'text' : 'password';
-            eyeOpen.style.display = isHidden ? 'none' : 'block';
-            eyeClosed.style.display = isHidden ? 'block' : 'none';
+        // Edit Action
+        document.querySelectorAll('.edit-row-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const id = btn.getAttribute('data-id');
+                const item = passwordsList.find(x => x.id === id);
+                if (item) {
+                    openModal(item);
+                }
+            });
         });
-    });
 
-    form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const cur = document.getElementById('cur-pw').value;
-        const newPw = document.getElementById('new-pw').value;
-        const conf = document.getElementById('confirm-pw').value;
+        // Delete Action
+        document.querySelectorAll('.delete-row-btn').forEach(btn => {
+            btn.addEventListener('click', async () => {
+                const id = btn.getAttribute('data-id');
+                if (confirm("Are you sure you want to permanently delete this password record?")) {
+                    try {
+                        const { error } = await supabase
+                            .from('passwords')
+                            .delete()
+                            .eq('id', id);
+                        if (error) throw error;
+                        showToast('Record Deleted', 'Password record removed successfully.', 'success');
+                        fetchPasswords();
+                    } catch (err) {
+                        showToast('Deletion Error', err.message, 'error');
+                    }
+                }
+            });
+        });
+    }
 
-        if (newPw !== conf) {
-            showToast('Validation Error', 'New passwords do not match.', 'error');
+    /* ---------- Search / Filter ---------- */
+    searchInput.addEventListener('input', () => {
+        const query = searchInput.value.toLowerCase().trim();
+        if (!query) {
+            renderPasswords(passwordsList);
             return;
         }
 
-        submitBtn.disabled = true;
-        const originalText = submitBtn.textContent;
-        submitBtn.textContent = 'Updating...';
+        const filtered = passwordsList.filter(item => 
+            item.account_name.toLowerCase().includes(query) ||
+            (item.username && item.username.toLowerCase().includes(query))
+        );
 
-        try {
-            const res = await fetch('/api/settings/change-password', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ current_password: cur, new_password: newPw })
-            });
-            if (!res.ok) {
-                const err = await res.json();
-                throw new Error(err.detail || 'Failed');
-            }
-            showToast('Password Updated', 'Your master password has been changed.', 'success');
-            form.reset();
-        } catch (err) {
-            showToast('Update Failed', err.message, 'error');
-        } finally {
-            submitBtn.disabled = false;
-            submitBtn.textContent = originalText;
-        }
+        renderPasswords(filtered);
     });
-}
 
-/* ---------- Toast (no animation) ---------- */
-function showToast(title, desc, type) {
-    const toast = document.createElement('div');
-    toast.className = 'toast';
+    /* ---------- Modal Controls ---------- */
+    function openModal(editItem = null) {
+        pwForm.reset();
+        evaluatePasswordStrength('');
 
-    let iconSvg = '';
-    if (type === 'success') {
-        iconSvg = `<svg class="toast-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
-    } else if (type === 'error') {
-        iconSvg = `<svg class="toast-icon toast-icon-error" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>`;
-    } else {
-        iconSvg = `<svg class="toast-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>`;
+        // Close the Generator Options Panel by default
+        document.getElementById('gen-section').style.display = 'none';
+
+        if (editItem) {
+            formTitle.textContent = 'Edit Password';
+            editIdInput.value = editItem.id;
+            accountNameInput.value = editItem.account_name;
+            accountUsernameInput.value = editItem.username || '';
+            accountPwInput.value = editItem.decryptedPassword;
+            evaluatePasswordStrength(editItem.decryptedPassword);
+        } else {
+            formTitle.textContent = 'Add Password';
+            editIdInput.value = '';
+        }
+
+        pwModal.classList.add('active');
     }
 
-    toast.innerHTML = `
-        ${iconSvg}
-        <div class="toast-body">
-            <div class="toast-title">${title}</div>
-            <div class="toast-desc">${desc}</div>
-        </div>
-        <button class="toast-close" aria-label="Close">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-        </button>
-    `;
+    function closeModal() {
+        pwModal.classList.remove('active');
+        pwForm.reset();
+    }
 
-    toastContainer.appendChild(toast);
+    addPwBtn.addEventListener('click', () => openModal());
+    closeModalBtn.addEventListener('click', closeModal);
+    cancelBtn.addEventListener('click', closeModal);
 
-    const dismiss = () => { toast.remove(); };
-    setTimeout(dismiss, 4000);
-    toast.querySelector('.toast-close').addEventListener('click', dismiss);
-}
+    // Close modal on background click
+    pwModal.addEventListener('click', (e) => {
+        if (e.target === pwModal) closeModal();
+    });
 
-/* ---------- Helpers ---------- */
-function esc(str) {
-    if (!str) return '';
-    const d = document.createElement('div');
-    d.textContent = str;
-    return d.innerHTML;
-}
+    /* ---------- Password Visibility Toggle in Modal ---------- */
+    togglePwVisBtn.addEventListener('click', () => {
+        const isHidden = accountPwInput.type === 'password';
+        accountPwInput.type = isHidden ? 'text' : 'password';
+        
+        const eyeOpen = togglePwVisBtn.querySelector('#eye-open');
+        const eyeClosed = togglePwVisBtn.querySelector('#eye-closed');
 
-function formatDate(iso) {
-    if (!iso) return '';
-    const d = new Date(iso);
-    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-}
+        if (eyeOpen && eyeClosed) {
+            eyeOpen.style.display = isHidden ? 'none' : 'block';
+            eyeClosed.style.display = isHidden ? 'block' : 'none';
+        }
+    });
+
+    /* ---------- Password Strength & Generator Flow ---------- */
+    accountPwInput.addEventListener('input', () => {
+        evaluatePasswordStrength(accountPwInput.value);
+    });
+
+    genLenInput.addEventListener('input', () => {
+        genLenVal.textContent = genLenInput.value;
+    });
+
+    fillGenBtn.addEventListener('click', () => {
+        const genSection = document.getElementById('gen-section');
+        
+        // If generator options are hidden, show them. Otherwise generate a password.
+        if (genSection.style.display === 'none') {
+            genSection.style.display = 'block';
+        }
+        
+        const generated = generateRandomPassword();
+        if (generated) {
+            accountPwInput.value = generated;
+            evaluatePasswordStrength(generated);
+        }
+    });
+
+    function generateRandomPassword() {
+        const len = parseInt(genLenInput.value);
+        const useUpper = genUpper.checked;
+        const useLower = genLower.checked;
+        const useNums = genNums.checked;
+        const useSyms = genSyms.checked;
+
+        let charset = '';
+        if (useUpper) charset += 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        if (useLower) charset += 'abcdefghijklmnopqrstuvwxyz';
+        if (useNums) charset += '0123456789';
+        if (useSyms) charset += '!@#$%^&*()_+-=[]{}|;:,.<>?';
+
+        if (!charset) {
+            showToast('Generator Config', 'Select at least one character set checkbox.', 'error');
+            return '';
+        }
+
+        let password = '';
+        const randBuffer = new Uint32Array(len);
+        crypto.getRandomValues(randBuffer);
+        
+        for (let i = 0; i < len; i++) {
+            password += charset[randBuffer[i] % charset.length];
+        }
+        return password;
+    }
+
+    function evaluatePasswordStrength(password) {
+        let score = 0;
+        if (password.length >= 8) score++;
+        if (password.length >= 12) score++;
+        if (/[A-Z]/.test(password)) score++;
+        if (/[a-z]/.test(password)) score++;
+        if (/[0-9]/.test(password)) score++;
+        if (/[^A-Za-z0-9]/.test(password)) score++;
+
+        if (password.length === 0) {
+            strengthFill.style.width = '0%';
+            strengthFill.style.backgroundColor = 'var(--border)';
+            strengthLabel.textContent = 'None';
+        } else if (score <= 3) {
+            strengthFill.style.width = '33%';
+            strengthFill.style.backgroundColor = 'var(--danger)';
+            strengthLabel.textContent = 'Weak';
+        } else if (score <= 5) {
+            strengthFill.style.width = '66%';
+            strengthFill.style.backgroundColor = '#f59e0b'; // amber
+            strengthLabel.textContent = 'Medium';
+        } else {
+            strengthFill.style.width = '100%';
+            strengthFill.style.backgroundColor = '#16a34a'; // green
+            strengthLabel.textContent = 'Strong';
+        }
+    }
+
+    /* ---------- Save Password Form Submit ---------- */
+    pwForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const saveBtn = document.getElementById('save-btn');
+        saveBtn.disabled = true;
+
+        const editId = editIdInput.value;
+        const accountName = accountNameInput.value.trim();
+        const username = accountUsernameInput.value.trim();
+        const plainPassword = accountPwInput.value;
+
+        try {
+            // Encrypt password client-side using zero-knowledge engine
+            const encryptedData = await window.VaultCrypto.encrypt(plainPassword, cryptoKey);
+            
+            if (editId) {
+                // Update existing record
+                const { error } = await supabase
+                    .from('passwords')
+                    .update({
+                        account_name: accountName,
+                        username: username,
+                        password: encryptedData.ciphertext,
+                        iv: encryptedData.iv,
+                        updated_at: new Date().toISOString()
+                    })
+                    .eq('id', editId);
+
+                if (error) throw error;
+                showToast('Record Updated', 'Credentials saved successfully.', 'success');
+            } else {
+                // Insert new record
+                const { error } = await supabase
+                    .from('passwords')
+                    .insert({
+                        user_id: session.user.id,
+                        account_name: accountName,
+                        username: username,
+                        password: encryptedData.ciphertext,
+                        iv: encryptedData.iv
+                    });
+
+                if (error) throw error;
+                showToast('Record Saved', 'New credentials added to vault.', 'success');
+            }
+
+            closeModal();
+            fetchPasswords();
+        } catch (err) {
+            showToast('Save Error', err.message, 'error');
+        } finally {
+            saveBtn.disabled = false;
+        }
+    });
+
+    /* ---------- Change Master Password Flow (with Re-encryption) ---------- */
+    changePwForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const curPw = document.getElementById('cur-pw').value;
+        const newPw = document.getElementById('new-pw').value;
+        const confirmPw = document.getElementById('confirm-pw').value;
+
+        if (newPw !== confirmPw) {
+            showToast('Change Password', 'New passwords do not match.', 'error');
+            return;
+        }
+
+        settingsSubmitBtn.disabled = true;
+        settingsSubmitBtn.textContent = 'Updating master key...';
+
+        try {
+            // 1. Verify old password matches current session decryption key
+            const oldKeyVerify = await window.VaultCrypto.deriveKey(curPw, session.user.email);
+            const oldB64Verify = await window.VaultCrypto.exportKeyToBase64(oldKeyVerify);
+            const activeB64 = sessionStorage.getItem('vault_key');
+
+            if (oldB64Verify !== activeB64) {
+                showToast('Auth Error', 'Current master password entered is incorrect.', 'error');
+                settingsSubmitBtn.disabled = false;
+                settingsSubmitBtn.textContent = 'Update Password';
+                return;
+            }
+
+            // 2. Derive new key from the new master password
+            const newKey = await window.VaultCrypto.deriveKey(newPw, session.user.email);
+            const newB64 = await window.VaultCrypto.exportKeyToBase64(newKey);
+
+            // 3. Batch re-encrypt all existing credentials in memory
+            showToast('Re-encrypting', 'Re-encrypting credentials with new master key...', 'info');
+            const reEncryptPromises = [];
+
+            for (let item of passwordsList) {
+                const encrypted = await window.VaultCrypto.encrypt(item.decryptedPassword, newKey);
+                reEncryptPromises.push(
+                    supabase
+                        .from('passwords')
+                        .update({
+                            password: encrypted.ciphertext,
+                            iv: encrypted.iv,
+                            updated_at: new Date().toISOString()
+                        })
+                        .eq('id', item.id)
+                );
+            }
+
+            // Execute all updates
+            await Promise.all(reEncryptPromises);
+
+            // 4. Update the user login credentials in Supabase Auth
+            const { error: authError } = await supabase.auth.updateUser({ password: newPw });
+            if (authError) throw authError;
+
+            // 5. Update local state key in sessionStorage
+            sessionStorage.setItem('vault_key', newB64);
+            cryptoKey = newKey;
+
+            // Clear input fields
+            changePwForm.reset();
+            showToast('Success', 'Master password updated and credentials re-encrypted.', 'success');
+
+            // Refresh decrypted passwords list view
+            fetchPasswords();
+
+        } catch (err) {
+            console.error(err);
+            showToast('Update Error', 'Failed to update credentials: ' + err.message, 'error');
+        } finally {
+            settingsSubmitBtn.disabled = false;
+            settingsSubmitBtn.textContent = 'Update Password';
+        }
+    });
 
 
+    /* ---------- Helpers ---------- */
+    function escapeHTML(str) {
+        if (!str) return '';
+        return str
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    }
+
+    /* ---------- Main Init ---------- */
+    // Initial fetch of password entries
+    fetchPasswords();
+
+})();
