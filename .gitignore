@@ -24,3 +24,12 @@ vault.db
 *.njsproj
 *.sln
 *.swp
+
+# Node / JS
+node_modules/
+.npm
+package-lock.json
+.dev.vars
+.wrangler/
+dist/
+
