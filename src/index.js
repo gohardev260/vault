@@ -160,7 +160,6 @@ async function register(req, env) {
 
   try {
     const res = await supabase(env).auth.signUp(email, password);
-    // Supabase can return session right away if email confirmation is off
     const token = res.access_token;
     
     if (token) {
@@ -170,9 +169,9 @@ async function register(req, env) {
       });
     }
     
-    // If confirmation is on, user needs to check their email
     return json({ message: 'Confirmation email sent' });
   } catch (e) {
+    console.error('Supabase SignUp Error:', e.message);
     return err(e.message);
   }
 }
@@ -189,6 +188,7 @@ async function login(req, env) {
       headers: { 'Content-Type': 'application/json', 'Set-Cookie': setCookieHeader(token) },
     });
   } catch (e) {
+    console.error('Supabase SignIn Error:', e.message);
     return err(e.message, 401);
   }
 }
