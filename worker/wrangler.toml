@@ -1,0 +1,16 @@
+name            = "vault"
+main            = "src/index.js"
+compatibility_date  = "2024-11-01"
+compatibility_flags = ["nodejs_compat"]
+
+# Serve the frontend HTML/CSS/JS as static assets on the same domain
+# All /api/* requests are handled by the Worker first
+[assets]
+directory = "../frontend"
+binding   = "ASSETS"
+
+# ── Secrets (set each one with: wrangler secret put <NAME>) ────────────────
+# wrangler secret put JWT_SECRET
+# wrangler secret put ENCRYPTION_KEY
+# wrangler secret put SUPABASE_URL
+# wrangler secret put SUPABASE_KEY

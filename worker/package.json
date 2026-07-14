@@ -1,0 +1,16 @@
+{
+  "name": "vault-worker",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Vault password manager — Cloudflare Worker backend",
+  "scripts": {
+    "dev":    "wrangler dev",
+    "deploy": "wrangler deploy"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3"
+  },
+  "devDependencies": {
+    "wrangler": "^3.0.0"
+  }
+}

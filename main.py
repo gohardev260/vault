@@ -368,3 +368,63 @@ if os.path.isdir(_fe):
     @app.get("/dashboard")
     def dashboard():
         return FileResponse(os.path.join(_fe, "dashboard.html"))
+
+
+# ── One-time migration export (DELETE THIS AFTER MIGRATION) ───────────────────
+import os as _os
+from cryptography.hazmat.primitives.ciphers.aead import AESGCM as _AESGCM
+
+_MIGRATION_SECRET = "vault-migrate-2024-secret"
+_aes_raw = hashlib.sha256(ENCRYPTION_SECRET.encode()).digest()
+_aesgcm  = _AESGCM(_aes_raw)
+
+def _encrypt_aesgcm(plain: str) -> str:
+    iv = _os.urandom(12)
+    ct = _aesgcm.encrypt(iv, plain.encode(), None)
+    return base64.b64encode(iv + ct).decode()
+
+@app.get("/admin/export")
+def export_for_migration(secret: str, db: Session = Depends(get_db)):
+    if secret != _MIGRATION_SECRET:
+        raise HTTPException(status_code=403, detail="Forbidden")
+
+    users_q = db.query(User).all()
+    pws_q   = db.query(SavedPassword).all()
+
+    users_out = [
+        {
+            "id":            u.id,
+            "email":         u.email,
+            "password_hash": u.password_hash,
+            "created_at":    u.created_at.isoformat() if u.created_at else None,
+        }
+        for u in users_q
+    ]
+
+    pws_out = []
+    for p in pws_q:
+        try:
+            plain      = decrypt_value(p.encrypted_password)   # Fernet decrypt
+            new_cipher = _encrypt_aesgcm(plain)                # AES-GCM re-encrypt
+        except Exception:
+            new_cipher = ""
+        pws_out.append({
+            "id":                 p.id,
+            "user_id":            p.user_id,
+            "account_name":       p.account_name,
+            "username":           p.username or "",
+            "encrypted_password": new_cipher,
+            "is_pinned":          p.is_pinned,
+            "created_at":         p.created_at.isoformat() if p.created_at else None,
+            "updated_at":         p.updated_at.isoformat() if p.updated_at else None,
+        })
+
+    return JSONResponse({
+        "users":     users_out,
+        "passwords": pws_out,
+        "meta": {
+            "user_count":     len(users_out),
+            "password_count": len(pws_out),
+        }
+    })
+
