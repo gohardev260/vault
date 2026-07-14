@@ -49,8 +49,17 @@ async function decryptPw(cipher, secret) {
 // ─── Supabase REST & Auth client ─────────────────────────────────────────────
 
 function supabase(env) {
-  const restBase = `${env.SUPABASE_URL}/rest/v1`;
-  const authBase = `${env.SUPABASE_URL}/auth/v1`;
+  if (!env.SUPABASE_URL) {
+    throw new Error("SUPABASE_URL secret is missing. Please set it using: npx wrangler secret put SUPABASE_URL");
+  }
+  if (!env.SUPABASE_KEY) {
+    throw new Error("SUPABASE_KEY secret is missing. Please set it using: npx wrangler secret put SUPABASE_KEY");
+  }
+
+  // Ensure URL has a protocol
+  const url = env.SUPABASE_URL.startsWith('http') ? env.SUPABASE_URL : `https://${env.SUPABASE_URL}`;
+  const restBase = `${url}/rest/v1`;
+  const authBase = `${url}/auth/v1`;
   
   const commonHeaders = {
     apikey: env.SUPABASE_KEY,
