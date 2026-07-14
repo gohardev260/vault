@@ -91,7 +91,6 @@
     const toastContainer = document.getElementById('toast-container');
     const sidebar = document.getElementById('sidebar');
     const sidebarTabs = document.querySelectorAll('.sidebar-tab');
-    const sidebarProfileBtn = document.getElementById('sidebar-profile-btn');
     const panels = document.querySelectorAll('.panel');
 
     // Password Elements
@@ -125,28 +124,25 @@
 
     // Profile Elements
     const userEmailDisplay = document.getElementById('user-email');
-    const sidebarEmailDisplay = document.getElementById('sidebar-user-email');
     const changePwForm = document.getElementById('change-pw-form');
     const settingsSubmitBtn = document.getElementById('settings-submit');
     
 
     /* ---------- Profile Info Initialization ---------- */
     userEmailDisplay.textContent = session.user.email;
-    if (sidebarEmailDisplay) {
-        sidebarEmailDisplay.textContent = session.user.email;
-    }
+
 
 
     /* ---------- Tab Navigation ---------- */
     function switchTab(tabId) {
         // Deactivate all tabs and panels
         sidebarTabs.forEach(tab => tab.classList.remove('active'));
-        if (sidebarProfileBtn) sidebarProfileBtn.classList.remove('active');
+
         panels.forEach(panel => panel.classList.remove('active'));
 
         // Activate matching tab and panel
         if (tabId === 'profile') {
-            if (sidebarProfileBtn) sidebarProfileBtn.classList.add('active');
+
             // Select profile tab button as active if it exists
             const profileTabBtn = document.querySelector('.sidebar-tab[data-tab="profile"]');
             if (profileTabBtn) profileTabBtn.classList.add('active');
@@ -164,12 +160,7 @@
         });
     });
 
-    if (sidebarProfileBtn) {
-        sidebarProfileBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            switchTab('profile');
-        });
-    }
+
 
     /* ---------- Toast System ---------- */
     function showToast(title, desc, type) {

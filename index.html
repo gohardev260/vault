@@ -4,8 +4,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vault — Password Manager</title>
-    <link rel="stylesheet" href="css/style.css?v=2.1">
+    <title>Vault — Zero-Knowledge Password Manager</title>
+    <link rel="stylesheet" href="css/style.css?v=2.5">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/config.js"></script>
     <script src="js/crypto.js"></script>
@@ -36,78 +36,397 @@
         </div>
     </div>
 
-    <div class="page-landing-simple">
-        <!-- Header -->
-        <header class="header">
-            <div class="header-inner">
-                <div class="logo" onclick="window.location.reload()">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                        stroke-linecap="round" stroke-linejoin="round">
-                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-                        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-                    </svg>
-                    <span>Vault</span>
+    <!-- Auth Modal Overlay -->
+    <div class="modal-overlay" id="auth-modal">
+        <div class="modal-wrapper">
+            <div class="modal-card">
+                <div class="modal-header">
+                    <h3 id="auth-title">Sign in</h3>
+                    <button type="button" class="btn-icon" id="close-auth-modal-btn" aria-label="Close Modal">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                    </button>
                 </div>
-                <button class="btn btn-sm" id="header-cta-btn">Create Account</button>
-            </div>
-        </header>
+                <p id="auth-subtitle" class="caption" style="margin-top: -12px; margin-bottom: 20px;">Enter your master credentials to open your vault.</p>
 
-        <!-- Main Content -->
-        <main class="landing-main-simple">
-            <div class="auth-card-wrap">
-                <div class="card auth-card">
-                    <div class="auth-header">
-                        <h2 id="auth-title">Sign in</h2>
-                        <p id="auth-subtitle">Enter your master credentials to open your vault.</p>
+                <form id="auth-form">
+                    <div class="field">
+                        <label for="email" class="field-label">Email Address</label>
+                        <input type="email" id="email" class="field-input" placeholder="you@example.com" required autocomplete="email">
                     </div>
 
-                    <form id="auth-form">
-                        <div class="field">
-                            <label for="email" class="field-label">Email Address</label>
-                            <input type="email" id="email" class="field-input" placeholder="you@example.com" required
-                                autocomplete="email">
+                    <div class="field">
+                        <label for="password" class="field-label">Master Password</label>
+                        <div class="field-input-wrap">
+                            <input type="password" id="password" class="field-input field-input-padded" placeholder="Enter master password" required minlength="8" autocomplete="current-password">
+                            <button type="button" class="input-action-btn" id="pw-toggle" aria-label="Toggle password visibility">
+                                <svg class="eye-icon" id="eye-open" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                </svg>
+                                <svg class="eye-icon" id="eye-closed" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none">
+                                    <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"></path>
+                                    <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"></path>
+                                    <path d="M6.61 6.61A13.52 13.52 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"></path>
+                                    <line x1="2" y1="2" x2="22" y2="22"></line>
+                                </svg>
+                            </button>
                         </div>
+                    </div>
 
-                        <div class="field">
-                            <label for="password" class="field-label">Master Password</label>
-                            <div class="field-input-wrap">
-                                <input type="password" id="password" class="field-input field-input-padded"
-                                    placeholder="Enter master password" required minlength="8"
-                                    autocomplete="current-password">
-                                <button type="button" class="input-action-btn" id="pw-toggle"
-                                    aria-label="Toggle password visibility">
-                                    <svg class="eye-icon" id="eye-open" width="16" height="16" viewBox="0 0 24 24"
-                                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                        stroke-linejoin="round">
-                                        <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
-                                        <circle cx="12" cy="12" r="3"></circle>
+                    <button type="submit" class="btn btn-primary btn-full" id="auth-submit" style="margin-top: 8px;">Sign in</button>
+                </form>
+
+                <div class="auth-toggle" style="margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--hairline-cool); text-align: center; font-size: 14px;">
+                    <span id="toggle-text">No account yet?</span>
+                    <a href="#" id="toggle-link" style="color: var(--ink); font-weight: 500; margin-left: 4px;">Create one</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Header Navigation -->
+    <header class="nav-bar-light">
+        <div class="nav-container">
+            <a href="#" class="logo-wrap" onclick="window.location.reload()">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                </svg>
+                <span>Vault<span class="logo-dot"></span></span>
+            </a>
+            <nav>
+                <ul class="nav-links">
+                    <li><a href="#features" class="nav-link">Features</a></li>
+                    <li><a href="#developers" class="nav-link">Developers</a></li>
+                    <li><a href="#pricing" class="nav-link">Pricing</a></li>
+                </ul>
+            </nav>
+            <div class="nav-actions">
+                <button class="link-button trigger-auth" data-mode="login">Sign In</button>
+                <button class="btn btn-primary btn-sm" id="header-cta-btn">Create Account</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <div class="container">
+            <div class="hero-inner">
+                <div class="hero-pill">
+                    <span class="hero-pill-badge">NEW</span>
+                    <span>Zero-Knowledge AES-GCM engine v2.0</span>
+                </div>
+                <h1 class="display-xxl hero-title">Vault. Zero-knowledge password management for developers.</h1>
+                <p class="body-lg hero-desc">Secure your digital credentials in your own database. End-to-end client-side encryption ensures your master password and data never touch our servers.</p>
+                <div class="hero-ctas">
+                    <button class="btn btn-primary trigger-auth" data-mode="register">Get Started</button>
+                    <button class="btn btn-secondary trigger-auth" data-mode="login">Access Vault</button>
+                </div>
+            </div>
+
+            <!-- Composited Product UI Mockup -->
+            <div class="mockup-container">
+                <div class="mockup-chrome">
+                    <div class="mockup-header">
+                        <div class="mockup-dots">
+                            <div class="mockup-dot"></div>
+                            <div class="mockup-dot"></div>
+                            <div class="mockup-dot"></div>
+                        </div>
+                        <div class="mockup-address">https://vault.dev/dashboard</div>
+                        <div class="mockup-tag mockup-tag-green">
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="margin-right: 4px;">
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg>
+                            <span>Encrypted</span>
+                        </div>
+                    </div>
+                    <div class="mockup-body">
+                        <aside class="mockup-sidebar">
+                            <div class="mockup-sidebar-item active">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                                </svg>
+                                <span>Passwords</span>
+                            </div>
+                            <div class="mockup-sidebar-item">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                    <circle cx="12" cy="7" r="4"></circle>
+                                </svg>
+                                <span>Profile</span>
+                            </div>
+                        </aside>
+                        <main class="mockup-content">
+                            <div class="mockup-view-header">
+                                <h3 class="heading-lg">Passwords</h3>
+                                <button class="btn btn-primary btn-sm">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                                        <line x1="5" y1="12" x2="19" y2="12"></line>
                                     </svg>
-                                    <svg class="eye-icon" id="eye-closed" width="16" height="16" viewBox="0 0 24 24"
-                                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                        stroke-linejoin="round" style="display:none">
-                                        <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"></path>
-                                        <path
-                                            d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68">
-                                        </path>
-                                        <path d="M6.61 6.61A13.52 13.52 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61">
-                                        </path>
-                                        <line x1="2" y1="2" x2="22" y2="22"></line>
-                                    </svg>
+                                    <span>Add Password</span>
                                 </button>
                             </div>
-                        </div>
-
-                        <button type="submit" class="btn btn-primary btn-full" id="auth-submit">Sign in</button>
-                    </form>
-
-                    <div class="auth-toggle">
-                        <span id="toggle-text">No account yet?</span>
-                        <a href="#" id="toggle-link">Create one</a>
+                            <div class="mockup-table-card">
+                                <table class="mockup-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Account</th>
+                                            <th>Username</th>
+                                            <th>Password</th>
+                                            <th>Security</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td><strong>GitHub</strong></td>
+                                            <td style="color: var(--ink-mute);">dev@example.com</td>
+                                            <td style="font-family: var(--font-mono); letter-spacing: 2px; color: var(--ink-mute);">••••••••</td>
+                                            <td><span class="pill-tag-green" style="font-size: 10px; padding: 1px 6px;">Strong</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Supabase</strong></td>
+                                            <td style="color: var(--ink-mute);">admin@project.co</td>
+                                            <td style="font-family: var(--font-mono); letter-spacing: 2px; color: var(--ink-mute);">••••••••</td>
+                                            <td><span class="pill-tag-green" style="font-size: 10px; padding: 1px 6px;">Strong</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Vercel</strong></td>
+                                            <td style="color: var(--ink-mute);">deploy@org.net</td>
+                                            <td style="font-family: var(--font-mono); letter-spacing: 2px; color: var(--ink-mute);">••••••••</td>
+                                            <td><span class="pill-tag-soft" style="font-size: 10px; padding: 1px 6px; background-color: #f59e0b; color: #ffffff; border-color: #f59e0b;">Medium</span></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </main>
                     </div>
                 </div>
             </div>
-        </main>
-    </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="section-padding" id="features" style="background-color: var(--canvas-soft); border-top: 1px solid var(--hairline-cool); border-bottom: 1px solid var(--hairline-cool);">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="display-lg">Designed for complete privacy.</h2>
+                <p class="body-lg">Vault pairs absolute data portability with mathematical proofs to keep your digital identity secure.</p>
+            </div>
+            <div class="features-grid">
+                <div class="card card-feature-light">
+                    <div class="feature-icon">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                        </svg>
+                    </div>
+                    <h3 class="heading-md" style="margin-bottom: 8px;">Zero-Knowledge Architecture</h3>
+                    <p class="caption">Encryption keys are derived client-side from your master password using PBKDF2. Your raw passwords never leave your browser.</p>
+                </div>
+                <div class="card card-feature-light">
+                    <div class="feature-icon">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path>
+                        </svg>
+                    </div>
+                    <h3 class="heading-md" style="margin-bottom: 8px;">Supabase Integration</h3>
+                    <p class="caption">Bring your own public database storage. Connect your custom database credentials locally to completely control your backups.</p>
+                </div>
+                <div class="card card-feature-light">
+                    <div class="feature-icon">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <path d="M12 16v-4M12 8h.01"></path>
+                        </svg>
+                    </div>
+                    <h3 class="heading-md" style="margin-bottom: 8px;">Custom Entropy Generator</h3>
+                    <p class="caption">Generate high-entropy credentials based on length, special symbols, casing, and digits. Evaluated instantly via a live safety tracker.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Developer/Code Section -->
+    <section class="section-padding" id="developers">
+        <div class="container">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--spacing-huge); align-items: center;">
+                <div>
+                    <div class="pill-tag-green" style="margin-bottom: var(--spacing-md);">CRYPTO STANDARD</div>
+                    <h2 class="display-lg" style="margin-bottom: var(--spacing-md);">Open Web Cryptography Standard</h2>
+                    <p class="body-md text-sec" style="margin-bottom: var(--spacing-lg);">Vault relies strictly on native browser Web Crypto implementations. Keys are generated with 100,000 PBKDF2 iterations, exporting a 256-bit AES-GCM envelope.</p>
+                    <a href="js/crypto.js" class="link-on-light font-medium" target="_blank">Read crypto.js implementation</a>
+                </div>
+                <div class="card-feature-dark">
+                    <h4 class="caption" style="color: var(--primary); margin-bottom: 12px; font-family: var(--font-mono);">// zero_knowledge_encrypt.js</h4>
+                    <div class="code-block" style="font-size: 12px; padding: 0; background: transparent; border: none; overflow: visible;">// Derive key from master password
+const key = await VaultCrypto.deriveKey(pw, salt);
+
+// Encrypt payload client-side
+const payload = await VaultCrypto.encrypt(secret, key);
+
+// Insert into your Supabase database
+await supabase.from('passwords').insert({
+  password: payload.ciphertext,
+  iv: payload.iv
+});</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing Section -->
+    <section class="section-padding" id="pricing" style="background-color: var(--canvas-soft); border-top: 1px solid var(--hairline-cool);">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="display-lg">Simple, transparent options.</h2>
+                <p class="body-lg">Since Vault is self-hosted on your own database, our plans are focused on usage convenience.</p>
+            </div>
+            <div class="pricing-grid">
+                <div class="card card-pricing">
+                    <div class="pricing-title">Free</div>
+                    <div class="pricing-price">
+                        <span class="pricing-amount">$0</span>
+                        <span class="pricing-period">/ forever</span>
+                    </div>
+                    <p class="caption">For developers hosting their own single personal credentials storage database.</p>
+                    <ul class="pricing-list">
+                        <li class="pricing-item">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                            <span>Up to 50 credentials</span>
+                        </li>
+                        <li class="pricing-item">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                            <span>1 Local browser device</span>
+                        </li>
+                        <li class="pricing-item">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                            <span>Client-side encryption</span>
+                        </li>
+                        <li class="pricing-item pricing-item-off">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                            <span>Multi-device sync</span>
+                        </li>
+                    </ul>
+                    <button class="btn btn-secondary btn-full trigger-auth" data-mode="register">Deploy Vault</button>
+                </div>
+
+                <div class="card-pricing-featured">
+                    <div class="pricing-featured-title">Developer Pro</div>
+                    <div class="pricing-price">
+                        <span class="pricing-amount">$4</span>
+                        <span class="pricing-period">/ month</span>
+                    </div>
+                    <p class="caption" style="color: var(--ink-mute-2);">For developers syncing unlimited credentials across multiple instances and environments.</p>
+                    <ul class="pricing-list">
+                        <li class="pricing-item">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                            <span>Unlimited credentials</span>
+                        </li>
+                        <li class="pricing-item">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                            <span>Unlimited synchronized devices</span>
+                        </li>
+                        <li class="pricing-item">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                            <span>Custom password strength rules</span>
+                        </li>
+                        <li class="pricing-item">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                            <span>Secure database backup tool</span>
+                        </li>
+                    </ul>
+                    <button class="btn btn-primary btn-full trigger-auth" data-mode="register">Get Started</button>
+                </div>
+
+                <div class="card card-pricing">
+                    <div class="pricing-title">Enterprise Team</div>
+                    <div class="pricing-price">
+                        <span class="pricing-amount">$12</span>
+                        <span class="pricing-period">/ month</span>
+                    </div>
+                    <p class="caption">For teams looking to manage shared API secrets and environment keys securely.</p>
+                    <ul class="pricing-list">
+                        <li class="pricing-item">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                            <span>Shared team vaults</span>
+                        </li>
+                        <li class="pricing-item">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                            <span>Audit logs and permissions</span>
+                        </li>
+                        <li class="pricing-item">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                            <span>SSO and SAML auth</span>
+                        </li>
+                        <li class="pricing-item">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                            <span>Priority SLA support</span>
+                        </li>
+                    </ul>
+                    <button class="btn btn-secondary btn-full trigger-auth" data-mode="register">Create Team Vault</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer-light">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-info">
+                    <a href="#" class="logo-wrap">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                        </svg>
+                        <span>Vault<span class="logo-dot"></span></span>
+                    </a>
+                    <p class="footer-desc">Zero-knowledge client-side password manager running locally on your Supabase project.</p>
+                </div>
+                <div>
+                    <div class="footer-col-title">Product</div>
+                    <ul class="footer-list">
+                        <li><a href="#features" class="footer-link">Features</a></li>
+                        <li><a href="#pricing" class="footer-link">Pricing</a></li>
+                        <li><a href="#" class="footer-link">Security audits</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <div class="footer-col-title">Developers</div>
+                    <ul class="footer-list">
+                        <li><a href="#developers" class="footer-link">Cryptography</a></li>
+                        <li><a href="schema.sql" class="footer-link">Database Schema</a></li>
+                        <li><a href="https://github.com" class="footer-link" target="_blank">GitHub</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <div class="footer-col-title">Resources</div>
+                    <ul class="footer-list">
+                        <li><a href="#" class="footer-link">Documentation</a></li>
+                        <li><a href="#" class="footer-link">Guides</a></li>
+                        <li><a href="#" class="footer-link">Support</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <div class="footer-col-title">Company</div>
+                    <ul class="footer-list">
+                        <li><a href="#" class="footer-link">About</a></li>
+                        <li><a href="#" class="footer-link">Terms</a></li>
+                        <li><a href="#" class="footer-link">Privacy</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <span class="footer-copy">© 2026 Vault. Built on the Supabaze design language. Open source software under MIT.</span>
+            </div>
+        </div>
+    </footer>
 
     <script>
         /* ---------- Supabase Credentials Setup ---------- */
@@ -153,6 +472,8 @@
         }
 
         /* ---------- Elements ---------- */
+        const authModal = document.getElementById('auth-modal');
+        const closeAuthModalBtn = document.getElementById('close-auth-modal-btn');
         const form = document.getElementById('auth-form');
         const title = document.getElementById('auth-title');
         const subtitle = document.getElementById('auth-subtitle');
@@ -197,13 +518,40 @@
             }
         }
 
+        function openAuthModal(authMode = 'login') {
+            setAuthMode(authMode);
+            authModal.classList.add('active');
+        }
+
+        function closeAuthModal() {
+            authModal.classList.remove('active');
+        }
+
         toggleLink.addEventListener('click', (e) => {
             e.preventDefault();
             setAuthMode(mode === 'login' ? 'register' : 'login');
         });
 
         headerCtaBtn.addEventListener('click', () => {
-            setAuthMode(mode === 'login' ? 'register' : 'login');
+            openAuthModal(mode === 'login' ? 'register' : 'login');
+        });
+
+        // Trigger auth modal from CTAs
+        document.querySelectorAll('.trigger-auth').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const requestedMode = btn.getAttribute('data-mode') || 'login';
+                openAuthModal(requestedMode);
+            });
+        });
+
+        if (closeAuthModalBtn) {
+            closeAuthModalBtn.addEventListener('click', closeAuthModal);
+        }
+
+        authModal.addEventListener('click', (e) => {
+            if (e.target === authModal) {
+                closeAuthModal();
+            }
         });
 
         /* ---------- Password Visibility ---------- */
@@ -284,11 +632,11 @@
 
             let iconSvg = '';
             if (type === 'success') {
-                iconSvg = `<svg class="toast-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+                iconSvg = `<svg class="toast-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
             } else if (type === 'error') {
-                iconSvg = `<svg class="toast-icon toast-icon-error" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>`;
+                iconSvg = `<svg class="toast-icon toast-icon-error" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>`;
             } else {
-                iconSvg = `<svg class="toast-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>`;
+                iconSvg = `<svg class="toast-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>`;
             }
 
             toast.innerHTML = `
