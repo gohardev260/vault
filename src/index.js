@@ -160,7 +160,7 @@ async function register(req, env) {
 
   try {
     const res = await supabase(env).auth.signUp(email, password);
-    const token = res.access_token;
+    const token = res.access_token || res.session?.access_token;
     
     if (token) {
       return new Response(JSON.stringify({ message: 'ok' }), {
