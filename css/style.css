@@ -367,6 +367,7 @@ button, input { font-family: inherit; }
 .password-table {
     width: 100%;
     border-collapse: collapse;
+    table-layout: fixed;
 }
 
 .password-table th {
@@ -387,6 +388,9 @@ button, input { font-family: inherit; }
     color: var(--text-secondary);
     border-bottom: 1px solid var(--border);
     vertical-align: middle;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 .password-table tbody tr:last-child td { border-bottom: none; }
 .password-table tbody tr { transition: background 0.1s; }
@@ -398,6 +402,14 @@ button, input { font-family: inherit; }
     display: flex;
     align-items: center;
     gap: 8px;
+    min-width: 0;
+}
+.col-account-name span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+    flex: 1;
 }
 
 .pin-row-btn {
@@ -414,7 +426,20 @@ button, input { font-family: inherit; }
 .pin-row-btn:hover { opacity: 0.6; }
 .pin-row-btn.pinned { opacity: 1; color: var(--text); }
 
-.col-pw-field { display: flex; align-items: center; gap: 4px; }
+.col-pw-field {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    min-width: 0;
+    width: 100%;
+}
+.col-pw-field span {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
 
 .masked-pw {
     font-family: var(--mono);
@@ -428,7 +453,7 @@ button, input { font-family: inherit; }
     color: var(--text);
 }
 
-.row-actions { display: inline-flex; gap: 2px; justify-content: flex-end; }
+.row-actions { display: flex; gap: 4px; justify-content: flex-end; }
 
 .font-medium { font-weight: 500; color: var(--text); }
 .text-sec { color: var(--text-secondary); font-size: 14px; }
@@ -623,6 +648,102 @@ button, input { font-family: inherit; }
 .profile-divider { border: none; border-top: 1px solid var(--border); margin: 24px 0; }
 .profile-section h3 { font-size: 15px; font-weight: 600; margin-bottom: 16px; }
 
+/* ── PROFILE TRIGGER & POPOVER ── */
+.profile-trigger {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    cursor: pointer;
+    border-radius: 10px;
+    transition: background 0.12s;
+    margin: 4px 8px;
+    position: relative;
+    user-select: none;
+}
+.profile-trigger:hover {
+    background: var(--surface);
+}
+.profile-trigger .avatar {
+    width: 28px;
+    height: 28px;
+    background: #333;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    color: white;
+    font-size: 13px;
+    flex-shrink: 0;
+}
+.profile-trigger .profile-info {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+.profile-trigger .profile-name {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text);
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+}
+.profile-trigger .profile-email {
+    font-size: 11px;
+    color: var(--text-muted);
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+}
+
+.profile-popover {
+    position: absolute;
+    bottom: 74px;
+    left: 8px;
+    width: 240px;
+    background: #151515;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 6px;
+    display: none;
+    flex-direction: column;
+    gap: 2px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+    z-index: 150;
+}
+.profile-popover.active {
+    display: flex;
+}
+.popover-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    background: transparent;
+    border: none;
+    border-radius: 8px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-size: 14px;
+    text-align: left;
+    width: 100%;
+    transition: background 0.12s, color 0.12s;
+    outline: none;
+}
+.popover-item svg {
+    color: var(--text-muted);
+    transition: color 0.12s;
+}
+.popover-item:hover {
+    background: var(--surface);
+    color: white;
+}
+.popover-item:hover svg {
+    color: white;
+}
+
 
 /* ═══════════════════ RESPONSIVE ═════════════════════════ */
 
@@ -667,17 +788,22 @@ button, input { font-family: inherit; }
         border-left: 1px solid var(--border);
         padding: 0;
     }
-    .logout-btn {
-        flex-direction: column;
-        gap: 3px;
-        padding: 6px 14px;
-        align-items: center;
+    .profile-trigger {
+        padding: 0 14px;
+        margin: 0;
+        height: 100%;
         justify-content: center;
-        font-size: 10px;
         border-radius: 0;
-        width: auto;
     }
-    .logout-btn svg { width: 20px; height: 20px; }
+    .profile-trigger .profile-info {
+        display: none;
+    }
+    .profile-popover {
+        bottom: 64px;
+        left: auto;
+        right: 8px;
+        width: 180px;
+    }
 
     .main-content {
         margin-left: 0;
