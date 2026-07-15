@@ -132,26 +132,36 @@
     const userEmail = session.user.email;
     userEmailDisplay.textContent = userEmail;
 
-    // Populate Sidebar profile trigger
+    // Populate Sidebar profile trigger & mobile avatar
     const profileEmailEl = document.getElementById('profile-display-email');
     const profileNameEl = document.getElementById('profile-display-name');
     const profileAvatarEl = document.querySelector('.profile-trigger .avatar');
+    const mobileAvatarDisplay = document.getElementById('mobile-avatar-display');
+    
     if (profileEmailEl) profileEmailEl.textContent = userEmail;
     if (profileNameEl) profileNameEl.textContent = userEmail.split('@')[0];
     if (profileAvatarEl) profileAvatarEl.textContent = userEmail.charAt(0).toUpperCase();
+    if (mobileAvatarDisplay) mobileAvatarDisplay.textContent = userEmail.charAt(0).toUpperCase();
 
     // Profile Popover toggling
     const profileTrigger = document.getElementById('profile-menu-trigger');
+    const mobileProfileTrigger = document.getElementById('mobile-profile-trigger');
     const profilePopover = document.getElementById('profile-popover-menu');
-    if (profileTrigger && profilePopover) {
-        profileTrigger.addEventListener('click', (e) => {
+    
+    if (profilePopover) {
+        const togglePopover = (e) => {
             e.stopPropagation();
             profilePopover.classList.toggle('active');
-        });
+        };
+        
+        if (profileTrigger) profileTrigger.addEventListener('click', togglePopover);
+        if (mobileProfileTrigger) mobileProfileTrigger.addEventListener('click', togglePopover);
         
         // Hide popover when clicking anywhere else
         window.addEventListener('click', (e) => {
-            if (!profileTrigger.contains(e.target) && !profilePopover.contains(e.target)) {
+            const clickOnTrigger = (profileTrigger && profileTrigger.contains(e.target)) || 
+                                   (mobileProfileTrigger && mobileProfileTrigger.contains(e.target));
+            if (!clickOnTrigger && !profilePopover.contains(e.target)) {
                 profilePopover.classList.remove('active');
             }
         });
@@ -521,6 +531,12 @@
     }
 
     addPwBtn.addEventListener('click', () => openModal());
+    
+    const fabAddBtn = document.getElementById('fab-add-btn');
+    if (fabAddBtn) {
+        fabAddBtn.addEventListener('click', () => openModal());
+    }
+    
     closeModalBtn.addEventListener('click', closeModal);
     cancelBtn.addEventListener('click', closeModal);
 

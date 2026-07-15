@@ -699,10 +699,10 @@ button, input { font-family: inherit; }
 }
 
 .profile-popover {
-    position: absolute;
-    bottom: 74px;
-    left: 8px;
-    width: 240px;
+    position: fixed;
+    bottom: 72px;
+    left: 12px;
+    width: 236px;
     background: #151515;
     border: 1px solid var(--border);
     border-radius: 12px;
@@ -715,6 +715,14 @@ button, input { font-family: inherit; }
 }
 .profile-popover.active {
     display: flex;
+}
+
+/* Mobile top bar and FAB default states */
+.mobile-top-bar {
+    display: none;
+}
+.fab-btn {
+    display: none;
 }
 .popover-item {
     display: flex;
@@ -747,80 +755,242 @@ button, input { font-family: inherit; }
 
 /* ═══════════════════ RESPONSIVE ═════════════════════════ */
 
-@media (max-width: 768px) {
-    .sidebar {
-        position: fixed;
-        top: auto; bottom: 0; left: 0; right: 0;
-        width: 100% !important;
-        height: 60px;
-        flex-direction: row;
-        border-right: none;
-        border-top: 1px solid var(--border);
-        z-index: 200;
-        overflow: visible;
+/* Laptops & Standard Desktops (1024px - 1440px) */
+@media (max-width: 1440px) {
+    .main-content {
+        padding: 24px 28px;
     }
-    .sidebar-logo { display: none; }
-    .sidebar-nav {
-        flex-direction: row;
-        width: 100%;
-        justify-content: space-around;
-        align-items: center;
-        height: 100%;
-        padding: 0;
-        gap: 0;
+}
+
+/* Intermediate Laptops & Large Tablets (768px - 1024px) */
+@media (max-width: 1024px) {
+    .sidebar {
+        width: 72px;
+    }
+    .sidebar-logo span,
+    .sidebar-tab span,
+    .profile-trigger .profile-info {
+        display: none !important;
+    }
+    .sidebar-logo {
+        justify-content: center;
+        padding: 20px 0;
     }
     .sidebar-tab {
-        flex-direction: column;
-        gap: 3px;
-        padding: 6px 14px;
         justify-content: center;
-        align-items: center;
-        border-radius: 0;
-        font-size: 10px;
-        width: auto;
-    }
-    .sidebar-tab svg { width: 20px; height: 20px; }
-    .sidebar-bottom {
-        display: flex;
-        align-items: center;
-        height: 100%;
-        border-top: none;
-        border-left: 1px solid var(--border);
-        padding: 0;
+        padding: 12px 0;
     }
     .profile-trigger {
-        padding: 0 14px;
-        margin: 0;
-        height: 100%;
         justify-content: center;
         border-radius: 0;
+        padding: 12px 0;
     }
-    .profile-trigger .profile-info {
-        display: none;
+    .main-content {
+        margin-left: 72px;
+        padding: 20px 24px;
     }
     .profile-popover {
-        bottom: 64px;
-        left: auto;
-        right: 8px;
+        left: 12px;
+        bottom: 72px;
         width: 180px;
     }
+    /* Hide Updated column to keep cells readable */
+    .password-table th:nth-child(4),
+    .password-table td:nth-child(4) {
+        display: none;
+    }
+    .password-table th:nth-child(1) { width: 25% !important; }
+    .password-table th:nth-child(2) { width: 40% !important; }
+    .password-table th:nth-child(3) { width: 25% !important; }
+    .password-table th:nth-child(5) { width: 10% !important; }
+}
 
+/* Tablets & Mobile Devices (480px - 768px) */
+@media (max-width: 768px) {
+    .sidebar {
+        display: none !important;
+    }
+    .mobile-top-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        position: fixed;
+        top: 0; left: 0; right: 0;
+        height: 56px;
+        background: var(--sidebar-bg);
+        border-bottom: 1px solid var(--border);
+        padding: 0 16px;
+        z-index: 200;
+    }
+    .mobile-logo {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 16px;
+        font-weight: 600;
+        color: var(--text);
+    }
+    .mobile-profile-trigger {
+        cursor: pointer;
+    }
+    .avatar-mobile {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: var(--surface);
+        color: var(--text);
+        font-size: 13px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid var(--border);
+    }
     .main-content {
         margin-left: 0;
-        padding: 20px 16px 76px;
+        padding: 76px 16px 32px;
     }
-    .main-header {
-        flex-direction: column;
-        align-items: flex-start;
+    .profile-popover {
+        left: auto;
+        right: 12px;
+        top: 60px;
+        bottom: auto;
+        width: 200px;
+    }
+
+    /* Transform Table to Card-Based Layout */
+    .table-wrap {
+        border: none;
+        border-radius: 0;
+        overflow: visible;
+    }
+    .password-table,
+    .password-table tbody,
+    .password-table tr,
+    .password-table td {
+        display: block;
+        width: 100% !important;
+    }
+    .password-table thead {
+        display: none;
+    }
+    .password-table tr {
+        background: var(--sidebar-bg);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 16px;
+        margin-bottom: 16px;
+        position: relative;
+    }
+    .password-table tr:hover {
+        border-color: var(--text-muted);
+        background: var(--sidebar-bg);
+    }
+    .password-table td {
+        padding: 6px 0;
+        border-bottom: none;
+        white-space: normal;
+        overflow: visible;
+    }
+    .password-table td:nth-child(1) {
+        border-bottom: 1px solid var(--border);
+        padding-bottom: 10px;
+        margin-bottom: 8px;
+    }
+    .col-account-name {
+        gap: 10px;
+    }
+    .password-table td:nth-child(2)::before {
+        content: "Username / Email";
+        display: block;
+        font-size: 10px;
+        color: var(--text-muted);
+        margin-bottom: 2px;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+    }
+    .password-table td:nth-child(3)::before {
+        content: "Password";
+        display: block;
+        font-size: 10px;
+        color: var(--text-muted);
+        margin-bottom: 2px;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+    }
+    .password-table td:nth-child(4) {
+        display: none;
+    }
+    .password-table td:nth-child(5) {
+        border-top: 1px solid var(--border);
+        padding-top: 10px;
+        margin-top: 8px;
+        display: flex;
+        justify-content: flex-end;
+    }
+    .row-actions {
+        justify-content: flex-end;
+        width: 100%;
         gap: 12px;
-        margin-bottom: 20px;
     }
-    .page-title { font-size: 20px; }
-    .search-bar .field-input { max-width: none; }
-    .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-    .password-table { min-width: 560px; }
-    .modal, .setup-overlay { padding: 16px; align-items: flex-start; padding-top: 40px; }
-    .modal-content, .setup-card { padding: 24px; max-width: 100%; }
-    .toast-container { bottom: 72px; right: 12px; left: 12px; }
-    .toast { width: 100%; }
+}
+
+/* Small Mobile Devices (under 480px) */
+@media (max-width: 480px) {
+    .main-header .btn-primary {
+        display: none;
+    }
+    .page-title {
+        font-size: 22px;
+    }
+    .fab-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: fixed;
+        bottom: 24px;
+        right: 24px;
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        background: white;
+        color: black;
+        border: none;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.6);
+        cursor: pointer;
+        z-index: 199;
+        transition: transform 0.1s;
+    }
+    .fab-btn:active {
+        transform: scale(0.92);
+    }
+    
+    /* Full-screen bottom dialog sheets for small screen inputs */
+    .modal {
+        align-items: flex-end;
+        padding: 0;
+    }
+    .modal-content {
+        border-radius: 20px 20px 0 0;
+        max-width: 100%;
+        width: 100%;
+        max-height: 92vh;
+        overflow-y: auto;
+        border-bottom: none;
+        padding: 24px 20px;
+        animation: slideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    @keyframes slideUp {
+        from { transform: translateY(100%); }
+        to { transform: translateY(0); }
+    }
+    
+    .toast-container {
+        bottom: 92px;
+        right: 12px;
+        left: 12px;
+    }
+    .toast {
+        width: 100%;
+    }
 }
