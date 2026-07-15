@@ -20,8 +20,8 @@
         <div class="setup-card">
             <div class="setup-header">
                 <h3>Connect Supabase Project</h3>
-                <p>Vault is a client-side zero-knowledge password manager. Enter your Supabase credentials to configure your personal storage database. These details are stored locally in your browser.</p>
             </div>
+            <p class="caption" style="margin-bottom: var(--spacing-lg); text-transform: none;">Vault is a client-side zero-knowledge password manager. Enter your Supabase credentials to configure your personal storage database. These details are stored locally in your browser.</p>
             <form id="setup-form">
                 <div class="field">
                     <label for="setup-url" class="field-label">Supabase URL</label>
@@ -31,7 +31,7 @@
                     <label for="setup-key" class="field-label">Supabase Anon Key</label>
                     <input type="text" id="setup-key" class="field-input" placeholder="your-public-anon-key" required>
                 </div>
-                <button type="submit" class="btn btn-primary btn-full">Save and Connect</button>
+                <button type="submit" class="btn btn-primary btn-full" style="margin-top: var(--spacing-sm);">Save and Connect</button>
             </form>
         </div>
     </div>
@@ -85,7 +85,7 @@
             <!-- Passwords Panel -->
             <div class="panel active" id="panel-passwords">
                 <div class="viewport-header">
-                    <h2>Passwords</h2>
+                    <h2>Vault Explorer</h2>
                     <div class="viewport-actions">
                         <button class="btn btn-primary btn-sm" id="add-pw-btn">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -106,7 +106,7 @@
                 </div>
 
                 <div class="search-wrap">
-                    <input type="text" class="field-input search-field" id="search-input" placeholder="Search accounts by name or email...">
+                    <input type="text" class="field-input search-field" id="search-input" placeholder="Search parameters by name/email...">
                 </div>
 
                 <div class="table-card">
@@ -115,9 +115,9 @@
                             <thead>
                                 <tr>
                                     <th>Account Name</th>
-                                    <th>Username / Email</th>
-                                    <th>Password</th>
-                                    <th>Updated</th>
+                                    <th>Username / Key ID</th>
+                                    <th>Decrypted Password</th>
+                                    <th>Last Updated</th>
                                     <th class="text-right">Actions</th>
                                 </tr>
                             </thead>
@@ -132,7 +132,7 @@
             <!-- Profile Panel -->
             <div class="panel" id="panel-profile">
                 <div class="viewport-header">
-                    <h2>Profile</h2>
+                    <h2>Settings</h2>
                     <button class="btn btn-secondary btn-sm logout-btn" title="Sign Out">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px;">
                             <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
@@ -145,18 +145,18 @@
                 <div class="profile-container">
                     <div class="card profile-card">
                         <div class="profile-info-section">
-                            <span class="profile-info-label">Account Email</span>
+                            <span class="profile-info-label">Vault ID Email</span>
                             <div class="profile-info-email" id="user-email">...</div>
                         </div>
 
                         <hr class="profile-divider">
 
-                        <h3>Change Master Password</h3>
+                        <h3 class="caption" style="margin-bottom: var(--spacing-lg); color: var(--accent); font-size: 13px;">Change Master Cryptographic Key</h3>
                         <form id="change-pw-form">
                             <div class="field">
-                                <label for="cur-pw" class="field-label">Current Password</label>
+                                <label for="cur-pw" class="field-label">Current Master Password</label>
                                 <div class="field-input-wrap">
-                                    <input type="password" id="cur-pw" class="field-input field-input-padded" required>
+                                    <input type="password" id="cur-pw" class="field-input field-input-padded" required autocomplete="current-password">
                                     <button type="button" class="input-action-btn toggle-settings-pw" data-target="cur-pw" aria-label="Toggle password visibility">
                                         <svg class="eye-icon eye-open" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                             <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
@@ -172,9 +172,9 @@
                                 </div>
                             </div>
                             <div class="field">
-                                <label for="new-pw" class="field-label">New Password</label>
+                                <label for="new-pw" class="field-label">New Master Password</label>
                                 <div class="field-input-wrap">
-                                    <input type="password" id="new-pw" class="field-input field-input-padded" required minlength="8">
+                                    <input type="password" id="new-pw" class="field-input field-input-padded" required minlength="8" autocomplete="new-password">
                                     <button type="button" class="input-action-btn toggle-settings-pw" data-target="new-pw" aria-label="Toggle password visibility">
                                         <svg class="eye-icon eye-open" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                             <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
@@ -190,9 +190,9 @@
                                 </div>
                             </div>
                             <div class="field">
-                                <label for="confirm-pw" class="field-label">Confirm New Password</label>
+                                <label for="confirm-pw" class="field-label">Confirm New Master Password</label>
                                 <div class="field-input-wrap">
-                                    <input type="password" id="confirm-pw" class="field-input field-input-padded" required>
+                                    <input type="password" id="confirm-pw" class="field-input field-input-padded" required autocomplete="new-password">
                                     <button type="button" class="input-action-btn toggle-settings-pw" data-target="confirm-pw" aria-label="Toggle password visibility">
                                         <svg class="eye-icon eye-open" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                             <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
@@ -207,7 +207,7 @@
                                     </button>
                                 </div>
                             </div>
-                            <button type="submit" class="btn btn-primary btn-full" id="settings-submit" style="margin-top: 8px;">Update Password</button>
+                            <button type="submit" class="btn btn-primary btn-full" id="settings-submit" style="margin-top: var(--spacing-sm);">Update Master Key</button>
                         </form>
                     </div>
                 </div>
@@ -220,7 +220,7 @@
         <div class="modal-wrapper">
             <div class="modal-card">
                 <div class="modal-header">
-                    <h3 id="form-title">Add Password</h3>
+                    <h3 id="form-title">Add Credentials</h3>
                     <button type="button" class="btn-icon" id="close-modal-btn" aria-label="Close Modal">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -232,20 +232,20 @@
                     <input type="hidden" id="edit-id">
 
                     <div class="field">
-                        <label for="account-name" class="field-label">Account Name</label>
-                        <input type="text" id="account-name" class="field-input" placeholder="e.g. GitHub, Google, Netflix" required>
+                        <label for="account-name" class="field-label">Account / Service</label>
+                        <input type="text" id="account-name" class="field-input" placeholder="e.g. GitHub, AWS, Vercel" required>
                     </div>
 
                     <div class="field">
-                        <label for="account-username" class="field-label">Username / Email</label>
-                        <input type="text" id="account-username" class="field-input" placeholder="e.g. you@example.com, myusername">
+                        <label for="account-username" class="field-label">Username / Key ID</label>
+                        <input type="text" id="account-username" class="field-input" placeholder="e.g. user-id, API-access-key">
                     </div>
 
                     <div class="field">
-                        <label for="account-pw" class="field-label">Password</label>
+                        <label for="account-pw" class="field-label">Raw Secret Value</label>
                         <div class="input-row">
                             <div class="field-input-wrap">
-                                <input type="password" id="account-pw" class="field-input field-input-padded" placeholder="Enter or generate" required>
+                                <input type="password" id="account-pw" class="field-input field-input-padded" placeholder="Enter secret or generate" required autocomplete="new-password">
                                 <button type="button" class="input-action-btn" id="toggle-pw-vis" aria-label="Toggle password visibility">
                                     <svg class="eye-icon" id="eye-open" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                         <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
@@ -259,13 +259,13 @@
                                     </svg>
                                 </button>
                             </div>
-                            <button type="button" class="btn btn-secondary btn-sm" id="fill-gen-btn" style="height: 38px;">Generate</button>
+                            <button type="button" class="btn btn-secondary btn-sm" id="fill-gen-btn" style="height: 48px; border-radius: var(--radius-xs);">Generate</button>
                         </div>
                     </div>
 
                     <!-- Generator Options -->
                     <div class="gen-box" id="gen-section" style="display: none;">
-                        <h4>Password Options</h4>
+                        <h4 class="caption">Password Options</h4>
 
                         <div class="gen-row">
                             <label for="gen-len">Length</label>
