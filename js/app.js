@@ -478,14 +478,20 @@
         evaluatePasswordStrength('');
 
         if (editItem) {
-            // Edit mode: hide options by default and show current credentials
-            document.getElementById('gen-section').style.display = 'none';
+            // Edit mode: show options by default and show current credentials
+            document.getElementById('gen-section').style.display = 'block';
             formTitle.textContent = 'Edit Password';
             editIdInput.value = editItem.id;
             accountNameInput.value = editItem.account_name;
             accountUsernameInput.value = editItem.username || '';
             accountPwInput.value = editItem.decryptedPassword;
             evaluatePasswordStrength(editItem.decryptedPassword);
+
+            // Sync slider value to current password length (capped min: 8, max: 64)
+            const currentLen = editItem.decryptedPassword.length;
+            const sliderLen = Math.max(8, Math.min(64, currentLen));
+            genLenInput.value = sliderLen;
+            genLenVal.textContent = sliderLen;
         } else {
             // Add mode: show options by default, reset slider length, and auto-generate password
             document.getElementById('gen-section').style.display = 'block';
