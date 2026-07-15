@@ -61,8 +61,8 @@
         return;
     }
 
-    // Check if the cryptography key exists in sessionStorage
-    const b64Key = sessionStorage.getItem('vault_key');
+    // Check if the cryptography key exists in localStorage
+    const b64Key = localStorage.getItem('vault_key');
     if (!b64Key) {
         // If session key is lost, sign out and redirect to log in again
         await supabase.auth.signOut();
@@ -82,7 +82,7 @@
     // Listen for sign-out events
     supabase.auth.onAuthStateChange((event, newSession) => {
         if (event === 'SIGNED_OUT' || !newSession) {
-            sessionStorage.removeItem('vault_key');
+            localStorage.removeItem('vault_key');
             window.location.href = 'index.html';
         }
     });
@@ -477,10 +477,9 @@
         pwForm.reset();
         evaluatePasswordStrength('');
 
-        // Close the Generator Options Panel by default
-        document.getElementById('gen-section').style.display = 'none';
-
         if (editItem) {
+            // Edit mode: hide options by default and show current credentials
+            document.getElementById('gen-section').style.display = 'none';
             formTitle.textContent = 'Edit Password';
             editIdInput.value = editItem.id;
             accountNameInput.value = editItem.account_name;
@@ -488,8 +487,23 @@
             accountPwInput.value = editItem.decryptedPassword;
             evaluatePasswordStrength(editItem.decryptedPassword);
         } else {
+            // Add mode: show options by default, reset slider length, and auto-generate password
+            document.getElementById('gen-section').style.display = 'block';
             formTitle.textContent = 'Add Password';
             editIdInput.value = '';
+            
+            genLenInput.value = 16;
+            genLenVal.textContent = '16';
+            genUpper.checked = true;
+            genLower.checked = true;
+            genNums.checked = true;
+            genSyms.checked = true;
+            
+            const generated = generateRandomPassword();
+            if (generated) {
+                accountPwInput.value = generated;
+                evaluatePasswordStrength(generated);
+            }
         }
 
         pwModal.classList.add('active');
@@ -528,14 +542,26 @@
         evaluatePasswordStrength(accountPwInput.value);
     });
 
-    genLenInput.addEventListener('input', () => {
+    // Generate password in real-time as user changes inputs
+    function updateRealtimeGenerator() {
         genLenVal.textContent = genLenInput.value;
-    });
+        const generated = generateRandomPassword();
+        if (generated) {
+            accountPwInput.value = generated;
+            evaluatePasswordStrength(generated);
+        }
+    }
+
+    genLenInput.addEventListener('input', updateRealtimeGenerator);
+    genUpper.addEventListener('change', updateRealtimeGenerator);
+    genLower.addEventListener('change', updateRealtimeGenerator);
+    genNums.addEventListener('change', updateRealtimeGenerator);
+    genSyms.addEventListener('change', updateRealtimeGenerator);
 
     fillGenBtn.addEventListener('click', () => {
         const genSection = document.getElementById('gen-section');
         
-        // If generator options are hidden, show them. Otherwise generate a password.
+        // Ensure options panel is visible
         if (genSection.style.display === 'none') {
             genSection.style.display = 'block';
         }
@@ -588,18 +614,22 @@
             strengthFill.style.width = '0%';
             strengthFill.style.backgroundColor = 'var(--border)';
             strengthLabel.textContent = 'None';
+            strengthLabel.style.color = 'var(--text-muted)';
         } else if (score <= 3) {
             strengthFill.style.width = '33%';
             strengthFill.style.backgroundColor = 'var(--danger)';
             strengthLabel.textContent = 'Weak';
+            strengthLabel.style.color = 'var(--danger)';
         } else if (score <= 5) {
             strengthFill.style.width = '66%';
             strengthFill.style.backgroundColor = '#f59e0b'; // amber
             strengthLabel.textContent = 'Medium';
+            strengthLabel.style.color = '#f59e0b';
         } else {
             strengthFill.style.width = '100%';
             strengthFill.style.backgroundColor = '#16a34a'; // green
             strengthLabel.textContent = 'Strong';
+            strengthLabel.style.color = '#16a34a';
         }
     }
 
@@ -679,7 +709,7 @@
             // 1. Verify old password matches current session decryption key
             const oldKeyVerify = await window.VaultCrypto.deriveKey(curPw, session.user.email);
             const oldB64Verify = await window.VaultCrypto.exportKeyToBase64(oldKeyVerify);
-            const activeB64 = sessionStorage.getItem('vault_key');
+            const activeB64 = localStorage.getItem('vault_key');
 
             if (oldB64Verify !== activeB64) {
                 showToast('Auth Error', 'Current master password entered is incorrect.', 'error');
@@ -717,8 +747,8 @@
             const { error: authError } = await supabase.auth.updateUser({ password: newPw });
             if (authError) throw authError;
 
-            // 5. Update local state key in sessionStorage
-            sessionStorage.setItem('vault_key', newB64);
+            // 5. Update local state key in localStorage
+            localStorage.setItem('vault_key', newB64);
             cryptoKey = newKey;
 
             // Clear input fields

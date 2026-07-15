@@ -92,7 +92,9 @@ if (!initSupabase()) {
         location.reload();
     });
 } else {
-    client.auth.getSession().then(({data:{session}}) => { if (session) location.href = 'dashboard.html'; });
+    client.auth.getSession().then(({data:{session}}) => {
+        if (session && localStorage.getItem('vault_key')) location.href = 'dashboard.html';
+    });
 }
 
 const form = document.getElementById('auth-form');
@@ -146,7 +148,7 @@ form.addEventListener('submit', async e => {
             const {error} = await client.auth.signInWithPassword({email, password});
             if (error) throw error;
             const key = await window.VaultCrypto.deriveKey(password, email);
-            sessionStorage.setItem('vault_key', await window.VaultCrypto.exportKeyToBase64(key));
+            localStorage.setItem('vault_key', await window.VaultCrypto.exportKeyToBase64(key));
             showToast('Welcome', 'Redirecting…', 'success');
             setTimeout(() => location.href = 'dashboard.html', 600);
         } else {
@@ -154,7 +156,7 @@ form.addEventListener('submit', async e => {
             if (error) throw error;
             if (data.session) {
                 const key = await window.VaultCrypto.deriveKey(password, email);
-                sessionStorage.setItem('vault_key', await window.VaultCrypto.exportKeyToBase64(key));
+                localStorage.setItem('vault_key', await window.VaultCrypto.exportKeyToBase64(key));
                 showToast('Account created', 'Redirecting…', 'success');
                 setTimeout(() => location.href = 'dashboard.html', 600);
             } else {

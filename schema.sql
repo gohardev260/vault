@@ -26,3 +26,19 @@ create policy "Users can manage their own passwords"
   to authenticated
   using (auth.uid() = user_id)
   with check (auth.uid() = user_id);
+
+-- 2. Create updated_at trigger helper function
+create or replace function public.handle_updated_at()
+returns trigger as $$
+begin
+  new.updated_at = timezone('utc'::text, now());
+  return new;
+end;
+$$ language plpgsql;
+
+-- 3. Create trigger on passwords table
+drop trigger if exists set_passwords_updated_at on public.passwords;
+create trigger set_passwords_updated_at
+  before update on public.passwords
+  for each row
+  execute function public.handle_updated_at();

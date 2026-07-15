@@ -27,7 +27,7 @@ window.VaultCrypto = (function() {
             {
                 name: 'PBKDF2',
                 salt: saltBytes,
-                iterations: 100000,
+                iterations: 1000000,
                 hash: 'SHA-256'
             },
             baseKey,
@@ -35,13 +35,13 @@ window.VaultCrypto = (function() {
                 name: 'AES-GCM',
                 length: 256
             },
-            true, // Exportable so we can save it in sessionStorage
+            true, // Exportable so we can save it in localStorage
             ['encrypt', 'decrypt']
         );
     }
 
     /**
-     * Exports a CryptoKey to a Base64 string for sessionStorage storage.
+     * Exports a CryptoKey to a Base64 string for localStorage storage.
      */
     async function exportKeyToBase64(cryptoKey) {
         const rawKey = await crypto.subtle.exportKey('raw', cryptoKey);
