@@ -1,104 +1,108 @@
 <!DOCTYPE html>
 
-<html class="dark" lang="en"><head>
-<meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>Vault</title>
-<link rel="stylesheet" href="css/style.css">
-<script src="https://cdn.tailwindcss.com?plugins=container-queries"></script>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400&amp;display=swap" rel="stylesheet"/>
-<script id="tailwind-config">
-      tailwind.config = {
-        darkMode: "class",
-        theme: {
-          extend: {
-            "colors": {
-                    "danger": "#ef4444",
-                    "outline-variant": "#444748",
-                    "on-primary-fixed-variant": "#454747",
-                    "tertiary-fixed-dim": "#c8c6c5",
-                    "inverse-surface": "#e5e2e1",
-                    "secondary": "#c8c6c5",
-                    "on-surface": "#e5e2e1",
-                    "on-secondary-fixed-variant": "#474646",
-                    "outline": "#8e9192",
-                    "on-surface-variant": "#c4c7c8",
-                    "surface-container-lowest": "#0e0e0e",
-                    "background": "#0d0d0d",
-                    "on-error-container": "#ffdad6",
-                    "on-error": "#690005",
-                    "error-container": "#93000a",
-                    "surface-variant": "#353534",
-                    "on-tertiary-fixed-variant": "#474746",
-                    "inverse-on-surface": "#313030",
-                    "tertiary-fixed": "#e5e2e1",
-                    "error": "#ffb4ab",
-                    "tertiary": "#ffffff",
-                    "success": "#22c55e",
-                    "text-secondary": "#a0a0a0",
-                    "secondary-fixed-dim": "#c8c6c5",
-                    "surface-container-high": "#2a2a2a",
-                    "surface-dim": "#131313",
-                    "on-tertiary-container": "#656464",
-                    "secondary-fixed": "#e5e2e1",
-                    "text-muted": "#666666",
-                    "primary": "#ffffff",
-                    "on-secondary-container": "#bab8b7",
-                    "on-primary": "#000000",
-                    "on-primary-fixed": "#1a1c1c",
-                    "surface-container-low": "#1c1b1b",
-                    "inverse-primary": "#5d5f5f",
-                    "surface-container-highest": "#353534",
-                    "primary-fixed-dim": "#c6c6c7",
-                    "on-tertiary-fixed": "#1c1b1b",
-                    "on-primary-container": "#636565",
-                    "surface-bright": "#3a3939",
-                    "primary-fixed": "#e2e2e2",
-                    "text-primary": "#e8e8e8",
-                    "primary-container": "#e2e2e2",
-                    "on-secondary-fixed": "#1c1b1b",
-                    "surface-container": "#201f1f",
-                    "on-tertiary": "#313030",
-                    "surface": "#131313",
-                    "on-background": "#e5e2e1",
-                    "secondary-container": "#4a4949",
-                    "tertiary-container": "#e5e2e1",
-                    "border-subtle": "#2a2a2a",
-                    "on-secondary": "#313030",
-                    "surface-tint": "#c6c6c7"
+<html class="dark" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Vault</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdn.tailwindcss.com?plugins=container-queries"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400&amp;display=swap"
+        rel="stylesheet" />
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "danger": "#ef4444",
+                        "outline-variant": "#444748",
+                        "on-primary-fixed-variant": "#454747",
+                        "tertiary-fixed-dim": "#c8c6c5",
+                        "inverse-surface": "#e5e2e1",
+                        "secondary": "#c8c6c5",
+                        "on-surface": "#e5e2e1",
+                        "on-secondary-fixed-variant": "#474646",
+                        "outline": "#8e9192",
+                        "on-surface-variant": "#c4c7c8",
+                        "surface-container-lowest": "#0e0e0e",
+                        "background": "#0d0d0d",
+                        "on-error-container": "#ffdad6",
+                        "on-error": "#690005",
+                        "error-container": "#93000a",
+                        "surface-variant": "#353534",
+                        "on-tertiary-fixed-variant": "#474746",
+                        "inverse-on-surface": "#313030",
+                        "tertiary-fixed": "#e5e2e1",
+                        "error": "#ffb4ab",
+                        "tertiary": "#ffffff",
+                        "success": "#22c55e",
+                        "text-secondary": "#a0a0a0",
+                        "secondary-fixed-dim": "#c8c6c5",
+                        "surface-container-high": "#2a2a2a",
+                        "surface-dim": "#131313",
+                        "on-tertiary-container": "#656464",
+                        "secondary-fixed": "#e5e2e1",
+                        "text-muted": "#666666",
+                        "primary": "#ffffff",
+                        "on-secondary-container": "#bab8b7",
+                        "on-primary": "#000000",
+                        "on-primary-fixed": "#1a1c1c",
+                        "surface-container-low": "#1c1b1b",
+                        "inverse-primary": "#5d5f5f",
+                        "surface-container-highest": "#353534",
+                        "primary-fixed-dim": "#c6c6c7",
+                        "on-tertiary-fixed": "#1c1b1b",
+                        "on-primary-container": "#636565",
+                        "surface-bright": "#3a3939",
+                        "primary-fixed": "#e2e2e2",
+                        "text-primary": "#e8e8e8",
+                        "primary-container": "#e2e2e2",
+                        "on-secondary-fixed": "#1c1b1b",
+                        "surface-container": "#201f1f",
+                        "on-tertiary": "#313030",
+                        "surface": "#131313",
+                        "on-background": "#e5e2e1",
+                        "secondary-container": "#4a4949",
+                        "tertiary-container": "#e5e2e1",
+                        "border-subtle": "#2a2a2a",
+                        "on-secondary": "#313030",
+                        "surface-tint": "#c6c6c7"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "space-md": "0.75rem",
+                        "sidebar-width": "260px",
+                        "space-lg": "1rem",
+                        "space-xs": "0.25rem",
+                        "space-sm": "0.5rem",
+                        "space-xl": "1.5rem",
+                        "sidebar-collapsed": "72px",
+                        "space-2xl": "2rem"
+                    },
+                    "fontFamily": {
+                        "headline-md": ["Inter", "sans-serif"],
+                        "label-sm": ["Inter", "sans-serif"],
+                        "body-md": ["Inter", "sans-serif"],
+                        "code-md": ["JetBrains Mono", "monospace"],
+                        "display-logo": ["Inter", "sans-serif"],
+                        "headline-sm": ["Inter", "sans-serif"],
+                        "body-lg": ["Inter", "sans-serif"],
+                        "label-md": ["Inter", "sans-serif"],
+                        "headline-lg": ["Inter", "sans-serif"]
+                    }
+                },
             },
-            "borderRadius": {
-                    "DEFAULT": "0.25rem",
-                    "lg": "0.5rem",
-                    "xl": "0.75rem",
-                    "full": "9999px"
-            },
-            "spacing": {
-                    "space-md": "0.75rem",
-                    "sidebar-width": "260px",
-                    "space-lg": "1rem",
-                    "space-xs": "0.25rem",
-                    "space-sm": "0.5rem",
-                    "space-xl": "1.5rem",
-                    "sidebar-collapsed": "72px",
-                    "space-2xl": "2rem"
-            },
-            "fontFamily": {
-                    "headline-md": ["Inter", "sans-serif"],
-                    "label-sm": ["Inter", "sans-serif"],
-                    "body-md": ["Inter", "sans-serif"],
-                    "code-md": ["JetBrains Mono", "monospace"],
-                    "display-logo": ["Inter", "sans-serif"],
-                    "headline-sm": ["Inter", "sans-serif"],
-                    "body-lg": ["Inter", "sans-serif"],
-                    "label-md": ["Inter", "sans-serif"],
-                    "headline-lg": ["Inter", "sans-serif"]
-            }
-          },
-        },
-      }
+        }
     </script>
-<style>
+    <style>
         body {
             background-color: #0d0d0d;
             font-family: 'Inter', sans-serif;
@@ -108,6 +112,7 @@
             flex-direction: column;
             min-height: 100vh;
         }
+
         .auth-container {
             flex: 1;
             display: flex;
@@ -116,6 +121,7 @@
             justify-content: center;
             padding: 2rem;
         }
+
         .field-input {
             width: 100%;
             background-color: transparent !important;
@@ -125,10 +131,12 @@
             color: #ffffff !important;
             transition: border-color 0.2s;
         }
+
         .field-input:focus {
             outline: none;
             border-color: #ffffff !important;
         }
+
         .input-action-btn {
             position: absolute;
             right: 0.75rem;
@@ -142,15 +150,18 @@
             align-items: center;
             justify-content: center;
         }
+
         .input-action-btn:hover {
             color: #ffffff;
         }
+
         .toast-container {
             position: fixed;
             top: 1rem;
             right: 1rem;
             z-index: 50;
         }
+
         .toast {
             background: #201f1f;
             border: 1px solid #353534;
@@ -163,160 +174,193 @@
             animation: slideIn 0.3s ease-out;
             min-width: 300px;
         }
-        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-    </style>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="js/config.js"></script>
-<script src="js/crypto.js"></script>
-</head>
-<body>
-<div class="toast-container" id="toast-container"></div>
-<div class="auth-container">
-<!-- Centered Logo and Brand -->
-<div class="flex flex-col items-center mb-10">
-<div class="mb-4">
-<svg fill="none" height="48" stroke="white" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" viewbox="0 0 24 24" width="48">
-<path d="M12 2L3 12l9 10 9-10-9-10z"></path>
-</svg>
-</div>
-<h1 class="text-3xl font-semibold tracking-tight">Vault</h1>
-</div>
-<!-- Sign-in Form (360px wide) -->
-<div class="w-full max-w-[360px]">
-<h2 class="text-2xl font-semibold text-white mb-2" id="auth-title">Sign in</h2>
-<p class="text-sm text-text-muted mb-8" id="auth-subtitle">Enter your credentials to access your vault.</p>
-<form class="space-y-4" id="auth-form">
-<div class="space-y-2">
-<label class="text-xs font-medium text-text-secondary uppercase tracking-wider" for="email">Email</label>
-<input autocomplete="email" class="field-input" id="email" placeholder="you@example.com" required="" type="email"/>
-</div>
-<div class="space-y-2">
-<label class="text-xs font-medium text-text-secondary uppercase tracking-wider" for="password">Master Password</label>
-<div class="relative">
-<input autocomplete="current-password" class="field-input pr-10" id="password" minlength="8" placeholder="••••••••" required="" type="password"/>
-<button aria-label="Toggle visibility" class="input-action-btn" id="pw-toggle" type="button">
-<svg fill="none" height="18" id="eye-open" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" viewbox="0 0 24 24" width="18"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-<svg fill="none" height="18" id="eye-closed" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" style="display:none" viewbox="0 0 24 24" width="18"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"></path><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"></path><path d="M6.61 6.61A13.52 13.52 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"></path><line x1="2" x2="22" y1="2" y2="22"></line></svg>
-</button>
-</div>
-</div>
-<button class="w-full bg-white text-black font-semibold py-3 px-4 rounded-lg hover:bg-zinc-200 transition-colors mt-4" id="auth-submit" type="submit">
-                Sign in
-            </button>
-</form>
-<!-- Divider and Footer -->
-<div class="mt-8 pt-8 border-t border-surface-variant flex flex-col items-center gap-2">
-<p class="text-sm text-text-secondary">
-<span id="toggle-text">No account?</span>
-<a class="text-white hover:underline ml-1" href="#" id="toggle-link">Create one</a>
-</p>
-</div>
-</div>
-</div>
-<script>
-let supabaseUrl = window.SUPABASE_URL, supabaseKey = window.SUPABASE_ANON_KEY;
-if (!supabaseUrl || supabaseUrl === "YOUR_SUPABASE_URL" || !supabaseUrl.trim()) supabaseUrl = localStorage.getItem("vault_supabase_url");
-if (!supabaseKey || supabaseKey === "YOUR_SUPABASE_ANON_KEY" || !supabaseKey.trim()) supabaseKey = localStorage.getItem("vault_supabase_anon_key");
 
-let client = null;
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
 
-function initSupabase() {
-    if (supabaseUrl && supabaseKey && supabaseUrl !== "YOUR_SUPABASE_URL" && supabaseKey !== "YOUR_SUPABASE_ANON_KEY") {
-        try { client = window.supabase.createClient(supabaseUrl, supabaseKey); return true; } catch(e) { return false; }
-    }
-    return false;
-}
-
-if (initSupabase()) {
-    client.auth.getSession().then(({data:{session}}) => {
-        if (session && localStorage.getItem('vault_key')) location.href = 'dashboard.html';
-    });
-}
-
-const form = document.getElementById('auth-form');
-const titleEl = document.getElementById('auth-title');
-const subEl = document.getElementById('auth-subtitle');
-const submitBtn = document.getElementById('auth-submit');
-const toggleText = document.getElementById('toggle-text');
-const toggleLink = document.getElementById('toggle-link');
-const pwInput = document.getElementById('password');
-const pwToggle = document.getElementById('pw-toggle');
-const eyeOpen = document.getElementById('eye-open');
-const eyeClosed = document.getElementById('eye-closed');
-const toastContainer = document.getElementById('toast-container');
-let mode = 'login';
-
-function setMode(m) {
-    mode = m;
-    if (m === 'register') {
-        titleEl.textContent = 'Create account';
-        subEl.textContent = 'Set a master password to encrypt your vault.';
-        submitBtn.textContent = 'Create account';
-        toggleText.textContent = 'Have an account?';
-        toggleLink.textContent = 'Sign in';
-    } else {
-        titleEl.textContent = 'Sign in';
-        subEl.textContent = 'Enter your credentials to access your vault.';
-        submitBtn.textContent = 'Sign in';
-        toggleText.textContent = 'No account?';
-        toggleLink.textContent = 'Create one';
-    }
-}
-toggleLink.addEventListener('click', e => { e.preventDefault(); setMode(mode === 'login' ? 'register' : 'login'); });
-
-pwToggle.addEventListener('click', () => {
-    const h = pwInput.type === 'password';
-    pwInput.type = h ? 'text' : 'password';
-    eyeOpen.style.display = h ? 'none' : 'block';
-    eyeClosed.style.display = h ? 'block' : 'none';
-});
-
-form.addEventListener('submit', async e => {
-    e.preventDefault();
-    if (!client) { showToast('Configuration Error', 'Please ensure Supabase credentials are set in config.js.', 'error'); return; }
-    submitBtn.disabled = true;
-    const orig = submitBtn.textContent;
-    submitBtn.textContent = mode === 'login' ? 'Signing in…' : 'Creating account…';
-    const email = document.getElementById('email').value.trim();
-    const password = pwInput.value;
-    try {
-        if (mode === 'login') {
-            const {error} = await client.auth.signInWithPassword({email, password});
-            if (error) throw error;
-            const key = await window.VaultCrypto.deriveKey(password, email);
-            localStorage.setItem('vault_key', await window.VaultCrypto.exportKeyToBase64(key));
-            showToast('Welcome back', 'Accessing your vault...', 'success');
-            setTimeout(() => location.href = 'dashboard.html', 600);
-        } else {
-            const {data, error} = await client.auth.signUp({email, password});
-            if (error) throw error;
-            if (data.session) {
-                const key = await window.VaultCrypto.deriveKey(password, email);
-                localStorage.setItem('vault_key', await window.VaultCrypto.exportKeyToBase64(key));
-                showToast('Success', 'Vault created. Redirecting...', 'success');
-                setTimeout(() => location.href = 'dashboard.html', 600);
-            } else {
-                showToast('Verification Required', 'Check your email to confirm your account.', 'success');
-                setMode('login'); submitBtn.disabled = false; submitBtn.textContent = orig;
+            to {
+                transform: translateX(0);
+                opacity: 1;
             }
         }
-    } catch(err) { 
-        showToast('Authentication Error', err.message, 'error'); 
-        submitBtn.disabled = false; 
-        submitBtn.textContent = orig; 
-    }
-});
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/config.js"></script>
+    <script src="js/crypto.js"></script>
+</head>
 
-function showToast(title, desc, type) {
-    const t = document.createElement('div'); t.className = 'toast';
-    const ic = type==='success' ? `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`
-        : type==='error' ? `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`
-        : `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>`;
-    t.innerHTML = `${ic}<div class="flex-1"><div class="text-sm font-semibold text-white">${title}</div><div class="text-xs text-text-secondary mt-0.5">${desc}</div></div><button class="text-text-muted hover:text-white transition-colors"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>`;
-    toastContainer.appendChild(t);
-    const d = () => { t.style.opacity = '0'; t.style.transform = 'translateX(20px)'; setTimeout(() => t.remove(), 300); };
-    setTimeout(d, 4000);
-    t.querySelector('button').addEventListener('click', d);
-}
-</script>
-</body></html>
+<body>
+    <div class="toast-container" id="toast-container"></div>
+    <div class="auth-container">
+        <!-- Centered Logo and Brand -->
+        <div class="flex flex-col items-center mb-10">
+            <div class="mb-4">
+                <svg fill="none" height="48" stroke="white" stroke-linecap="round" stroke-linejoin="round"
+                    stroke-width="1.5" viewbox="0 0 24 24" width="48">
+                    <path d="M12 2L3 12l9 10 9-10-9-10z"></path>
+                </svg>
+            </div>
+            <h1 class="text-3xl font-semibold tracking-tight">Vault</h1>
+        </div>
+        <!-- Sign-in Form (360px wide) -->
+        <div class="w-full max-w-[360px]">
+            <h2 class="text-2xl font-semibold text-white mb-2" id="auth-title">Sign in</h2>
+            <p class="text-sm text-text-muted mb-8" id="auth-subtitle">Enter your credentials to access your vault.</p>
+            <form class="space-y-4" id="auth-form">
+                <div class="space-y-2">
+                    <label class="text-xs font-medium text-text-secondary uppercase tracking-wider"
+                        for="email">Email</label>
+                    <input autocomplete="email" class="field-input" id="email" placeholder="you@example.com" required=""
+                        type="email" />
+                </div>
+                <div class="space-y-2">
+                    <label class="text-xs font-medium text-text-secondary uppercase tracking-wider"
+                        for="password">Master Password</label>
+                    <div class="relative">
+                        <input autocomplete="current-password" class="field-input pr-10" id="password" minlength="8"
+                            placeholder="••••••••" required="" type="password" />
+                        <button aria-label="Toggle visibility" class="input-action-btn" id="pw-toggle" type="button">
+                            <svg fill="none" height="18" id="eye-open" stroke="currentColor" stroke-linecap="round"
+                                stroke-linejoin="round" stroke-width="1.5" viewbox="0 0 24 24" width="18">
+                                <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
+                                <circle cx="12" cy="12" r="3"></circle>
+                            </svg>
+                            <svg fill="none" height="18" id="eye-closed" stroke="currentColor" stroke-linecap="round"
+                                stroke-linejoin="round" stroke-width="1.5" style="display:none" viewbox="0 0 24 24"
+                                width="18">
+                                <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"></path>
+                                <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68">
+                                </path>
+                                <path d="M6.61 6.61A13.52 13.52 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"></path>
+                                <line x1="2" x2="22" y1="2" y2="22"></line>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                <button
+                    class="w-full bg-white text-black font-semibold py-3 px-4 rounded-lg hover:bg-zinc-200 transition-colors mt-4"
+                    id="auth-submit" type="submit">
+                    Sign in
+                </button>
+            </form>
+            <!-- Divider and Footer -->
+            <div class="mt-8 pt-8 border-t border-surface-variant flex flex-col items-center gap-2">
+                <p class="text-sm text-text-secondary">
+                    <span id="toggle-text">No account?</span>
+                    <a class="text-white hover:underline ml-1" href="#" id="toggle-link">Create one</a>
+                </p>
+            </div>
+        </div>
+    </div>
+    <script>
+        let supabaseUrl = window.SUPABASE_URL, supabaseKey = window.SUPABASE_ANON_KEY;
+        if (!supabaseUrl || supabaseUrl === "YOUR_SUPABASE_URL" || !supabaseUrl.trim()) supabaseUrl = localStorage.getItem("vault_supabase_url");
+        if (!supabaseKey || supabaseKey === "YOUR_SUPABASE_ANON_KEY" || !supabaseKey.trim()) supabaseKey = localStorage.getItem("vault_supabase_anon_key");
+
+        let client = null;
+
+        function initSupabase() {
+            if (supabaseUrl && supabaseKey && supabaseUrl !== "YOUR_SUPABASE_URL" && supabaseKey !== "YOUR_SUPABASE_ANON_KEY") {
+                try { client = window.supabase.createClient(supabaseUrl, supabaseKey); return true; } catch (e) { return false; }
+            }
+            return false;
+        }
+
+        if (initSupabase()) {
+            client.auth.getSession().then(({ data: { session } }) => {
+                if (session && localStorage.getItem('vault_key')) location.href = 'dashboard.html';
+            });
+        }
+
+        const form = document.getElementById('auth-form');
+        const titleEl = document.getElementById('auth-title');
+        const subEl = document.getElementById('auth-subtitle');
+        const submitBtn = document.getElementById('auth-submit');
+        const toggleText = document.getElementById('toggle-text');
+        const toggleLink = document.getElementById('toggle-link');
+        const pwInput = document.getElementById('password');
+        const pwToggle = document.getElementById('pw-toggle');
+        const eyeOpen = document.getElementById('eye-open');
+        const eyeClosed = document.getElementById('eye-closed');
+        const toastContainer = document.getElementById('toast-container');
+        let mode = 'login';
+
+        function setMode(m) {
+            mode = m;
+            if (m === 'register') {
+                titleEl.textContent = 'Create account';
+                subEl.textContent = 'Set a master password to encrypt your vault.';
+                submitBtn.textContent = 'Create account';
+                toggleText.textContent = 'Have an account?';
+                toggleLink.textContent = 'Sign in';
+            } else {
+                titleEl.textContent = 'Sign in';
+                subEl.textContent = 'Enter your credentials to access your vault.';
+                submitBtn.textContent = 'Sign in';
+                toggleText.textContent = 'No account?';
+                toggleLink.textContent = 'Create one';
+            }
+        }
+        toggleLink.addEventListener('click', e => { e.preventDefault(); setMode(mode === 'login' ? 'register' : 'login'); });
+
+        pwToggle.addEventListener('click', () => {
+            const h = pwInput.type === 'password';
+            pwInput.type = h ? 'text' : 'password';
+            eyeOpen.style.display = h ? 'none' : 'block';
+            eyeClosed.style.display = h ? 'block' : 'none';
+        });
+
+        form.addEventListener('submit', async e => {
+            e.preventDefault();
+            if (!client) { showToast('Configuration Error', 'Please ensure Supabase credentials are set in config.js.', 'error'); return; }
+            submitBtn.disabled = true;
+            const orig = submitBtn.textContent;
+            submitBtn.textContent = mode === 'login' ? 'Signing in…' : 'Creating account…';
+            const email = document.getElementById('email').value.trim();
+            const password = pwInput.value;
+            try {
+                if (mode === 'login') {
+                    const { error } = await client.auth.signInWithPassword({ email, password });
+                    if (error) throw error;
+                    const key = await window.VaultCrypto.deriveKey(password, email);
+                    localStorage.setItem('vault_key', await window.VaultCrypto.exportKeyToBase64(key));
+                    showToast('Welcome back', 'Accessing your vault...', 'success');
+                    setTimeout(() => location.href = 'dashboard.html', 600);
+                } else {
+                    const { data, error } = await client.auth.signUp({ email, password });
+                    if (error) throw error;
+                    if (data.session) {
+                        const key = await window.VaultCrypto.deriveKey(password, email);
+                        localStorage.setItem('vault_key', await window.VaultCrypto.exportKeyToBase64(key));
+                        showToast('Success', 'Vault created. Redirecting...', 'success');
+                        setTimeout(() => location.href = 'dashboard.html', 600);
+                    } else {
+                        showToast('Verification Required', 'Check your email to confirm your account.', 'success');
+                        setMode('login'); submitBtn.disabled = false; submitBtn.textContent = orig;
+                    }
+                }
+            } catch (err) {
+                showToast('Authentication Error', err.message, 'error');
+                submitBtn.disabled = false;
+                submitBtn.textContent = orig;
+            }
+        });
+
+        function showToast(title, desc, type) {
+            const t = document.createElement('div'); t.className = 'toast';
+            const ic = type === 'success' ? `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`
+                : type === 'error' ? `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`
+                    : `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>`;
+            t.innerHTML = `${ic}<div class="flex-1"><div class="text-sm font-semibold text-white">${title}</div><div class="text-xs text-text-secondary mt-0.5">${desc}</div></div><button class="text-text-muted hover:text-white transition-colors"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>`;
+            toastContainer.appendChild(t);
+            const d = () => { t.style.opacity = '0'; t.style.transform = 'translateX(20px)'; setTimeout(() => t.remove(), 300); };
+            setTimeout(d, 4000);
+            t.querySelector('button').addEventListener('click', d);
+        }
+    </script>
+</body>
+
+</html>

@@ -130,7 +130,7 @@
 
     /* ---------- Profile Info Initialization ---------- */
     const userEmail = session.user.email;
-    userEmailDisplay.textContent = userEmail;
+    if (userEmailDisplay) userEmailDisplay.textContent = userEmail;
 
     // Populate Sidebar profile trigger & mobile avatar
     const profileEmailEl = document.getElementById('profile-display-email');
