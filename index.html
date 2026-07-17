@@ -1,80 +1,224 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vault</title>
-    <link rel="stylesheet" href="css/style.css">
-    <link rel="icon" type="image/svg+xml" href="images/logo.svg">
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="js/config.js"></script>
-    <script src="js/crypto.js"></script>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Vault</title>
+<link rel="stylesheet" href="css/style.css">
+<script src="https://cdn.tailwindcss.com?plugins=container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "danger": "#ef4444",
+                    "outline-variant": "#444748",
+                    "on-primary-fixed-variant": "#454747",
+                    "tertiary-fixed-dim": "#c8c6c5",
+                    "inverse-surface": "#e5e2e1",
+                    "secondary": "#c8c6c5",
+                    "on-surface": "#e5e2e1",
+                    "on-secondary-fixed-variant": "#474646",
+                    "outline": "#8e9192",
+                    "on-surface-variant": "#c4c7c8",
+                    "surface-container-lowest": "#0e0e0e",
+                    "background": "#0d0d0d",
+                    "on-error-container": "#ffdad6",
+                    "on-error": "#690005",
+                    "error-container": "#93000a",
+                    "surface-variant": "#353534",
+                    "on-tertiary-fixed-variant": "#474746",
+                    "inverse-on-surface": "#313030",
+                    "tertiary-fixed": "#e5e2e1",
+                    "error": "#ffb4ab",
+                    "tertiary": "#ffffff",
+                    "success": "#22c55e",
+                    "text-secondary": "#a0a0a0",
+                    "secondary-fixed-dim": "#c8c6c5",
+                    "surface-container-high": "#2a2a2a",
+                    "surface-dim": "#131313",
+                    "on-tertiary-container": "#656464",
+                    "secondary-fixed": "#e5e2e1",
+                    "text-muted": "#666666",
+                    "primary": "#ffffff",
+                    "on-secondary-container": "#bab8b7",
+                    "on-primary": "#000000",
+                    "on-primary-fixed": "#1a1c1c",
+                    "surface-container-low": "#1c1b1b",
+                    "inverse-primary": "#5d5f5f",
+                    "surface-container-highest": "#353534",
+                    "primary-fixed-dim": "#c6c6c7",
+                    "on-tertiary-fixed": "#1c1b1b",
+                    "on-primary-container": "#636565",
+                    "surface-bright": "#3a3939",
+                    "primary-fixed": "#e2e2e2",
+                    "text-primary": "#e8e8e8",
+                    "primary-container": "#e2e2e2",
+                    "on-secondary-fixed": "#1c1b1b",
+                    "surface-container": "#201f1f",
+                    "on-tertiary": "#313030",
+                    "surface": "#131313",
+                    "on-background": "#e5e2e1",
+                    "secondary-container": "#4a4949",
+                    "tertiary-container": "#e5e2e1",
+                    "border-subtle": "#2a2a2a",
+                    "on-secondary": "#313030",
+                    "surface-tint": "#c6c6c7"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "space-md": "0.75rem",
+                    "sidebar-width": "260px",
+                    "space-lg": "1rem",
+                    "space-xs": "0.25rem",
+                    "space-sm": "0.5rem",
+                    "space-xl": "1.5rem",
+                    "sidebar-collapsed": "72px",
+                    "space-2xl": "2rem"
+            },
+            "fontFamily": {
+                    "headline-md": ["Inter", "sans-serif"],
+                    "label-sm": ["Inter", "sans-serif"],
+                    "body-md": ["Inter", "sans-serif"],
+                    "code-md": ["JetBrains Mono", "monospace"],
+                    "display-logo": ["Inter", "sans-serif"],
+                    "headline-sm": ["Inter", "sans-serif"],
+                    "body-lg": ["Inter", "sans-serif"],
+                    "label-md": ["Inter", "sans-serif"],
+                    "headline-lg": ["Inter", "sans-serif"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body {
+            background-color: #0d0d0d;
+            font-family: 'Inter', sans-serif;
+            color: #e5e2e1;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        .auth-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+        .field-input {
+            width: 100%;
+            background-color: transparent !important;
+            border: 1px solid #353534;
+            border-radius: 0.5rem;
+            padding: 0.75rem 1rem;
+            color: #ffffff !important;
+            transition: border-color 0.2s;
+        }
+        .field-input:focus {
+            outline: none;
+            border-color: #ffffff !important;
+        }
+        .input-action-btn {
+            position: absolute;
+            right: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #a0a0a0;
+            cursor: pointer;
+            background: none;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .input-action-btn:hover {
+            color: #ffffff;
+        }
+        .toast-container {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            z-index: 50;
+        }
+        .toast {
+            background: #201f1f;
+            border: 1px solid #353534;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            margin-bottom: 0.5rem;
+            animation: slideIn 0.3s ease-out;
+            min-width: 300px;
+        }
+        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+    </style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/config.js"></script>
+<script src="js/crypto.js"></script>
 </head>
 <body>
-
 <div class="toast-container" id="toast-container"></div>
-
-<div class="setup-overlay" id="setup-modal">
-    <div class="setup-card">
-        <div class="setup-header"><h3>Connect Supabase</h3></div>
-        <p class="modal-subtitle">Enter your project credentials. Stored locally in your browser only.</p>
-        <form id="setup-form">
-            <div class="field">
-                <label for="setup-url" class="field-label">Project URL</label>
-                <input type="url" id="setup-url" class="field-input" placeholder="https://your-project.supabase.co" required>
-            </div>
-            <div class="field">
-                <label for="setup-key" class="field-label">Anon Key</label>
-                <input type="text" id="setup-key" class="field-input" placeholder="your-public-anon-key" required>
-            </div>
-            <button type="submit" class="btn-primary btn-full">Connect</button>
-        </form>
-    </div>
+<div class="auth-container">
+<!-- Centered Logo and Brand -->
+<div class="flex flex-col items-center mb-10">
+<div class="mb-4">
+<svg fill="none" height="48" stroke="white" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" viewbox="0 0 24 24" width="48">
+<path d="M12 2L3 12l9 10 9-10-9-10z"></path>
+</svg>
 </div>
-
-<div class="auth-page">
-    <div class="auth-logo">
-        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M12 2L3 7v10l9 5 9-5V7L12 2z" />
-            <path d="M7 9l5 5 5-5" />
-        </svg>
-        <span>Vault</span>
-    </div>
-    <div class="auth-box">
-        <h2 id="auth-title">Sign in</h2>
-        <p class="auth-sub" id="auth-subtitle">Enter your credentials to access your vault.</p>
-        <form id="auth-form">
-            <div class="field">
-                <label for="email" class="field-label">Email</label>
-                <input type="email" id="email" class="field-input" placeholder="you@example.com" required autocomplete="email">
-            </div>
-            <div class="field">
-                <label for="password" class="field-label">Master Password</label>
-                <div class="field-input-wrap">
-                    <input type="password" id="password" class="field-input field-input-padded" placeholder="••••••••" required minlength="8" autocomplete="current-password">
-                    <button type="button" class="input-action-btn" id="pw-toggle" aria-label="Toggle visibility">
-                        <svg id="eye-open" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
-                        <svg id="eye-closed" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.52 13.52 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" y1="2" x2="22" y2="22"/></svg>
-                    </button>
-                </div>
-            </div>
-            <button type="submit" class="btn-primary btn-full" id="auth-submit">Sign in</button>
-        </form>
-        <div class="auth-footer">
-            <span id="toggle-text">No account?</span>
-            <a href="#" id="toggle-link">Create one</a>
-        </div>
-    </div>
+<h1 class="text-3xl font-semibold tracking-tight">Vault</h1>
 </div>
-
+<!-- Sign-in Form (360px wide) -->
+<div class="w-full max-w-[360px]">
+<h2 class="text-2xl font-semibold text-white mb-2" id="auth-title">Sign in</h2>
+<p class="text-sm text-text-muted mb-8" id="auth-subtitle">Enter your credentials to access your vault.</p>
+<form class="space-y-4" id="auth-form">
+<div class="space-y-2">
+<label class="text-xs font-medium text-text-secondary uppercase tracking-wider" for="email">Email</label>
+<input autocomplete="email" class="field-input" id="email" placeholder="you@example.com" required="" type="email"/>
+</div>
+<div class="space-y-2">
+<label class="text-xs font-medium text-text-secondary uppercase tracking-wider" for="password">Master Password</label>
+<div class="relative">
+<input autocomplete="current-password" class="field-input pr-10" id="password" minlength="8" placeholder="••••••••" required="" type="password"/>
+<button aria-label="Toggle visibility" class="input-action-btn" id="pw-toggle" type="button">
+<svg fill="none" height="18" id="eye-open" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" viewbox="0 0 24 24" width="18"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+<svg fill="none" height="18" id="eye-closed" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" style="display:none" viewbox="0 0 24 24" width="18"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"></path><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"></path><path d="M6.61 6.61A13.52 13.52 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"></path><line x1="2" x2="22" y1="2" y2="22"></line></svg>
+</button>
+</div>
+</div>
+<button class="w-full bg-white text-black font-semibold py-3 px-4 rounded-lg hover:bg-zinc-200 transition-colors mt-4" id="auth-submit" type="submit">
+                Sign in
+            </button>
+</form>
+<!-- Divider and Footer -->
+<div class="mt-8 pt-8 border-t border-surface-variant flex flex-col items-center gap-2">
+<p class="text-sm text-text-secondary">
+<span id="toggle-text">No account?</span>
+<a class="text-white hover:underline ml-1" href="#" id="toggle-link">Create one</a>
+</p>
+</div>
+</div>
+</div>
 <script>
 let supabaseUrl = window.SUPABASE_URL, supabaseKey = window.SUPABASE_ANON_KEY;
 if (!supabaseUrl || supabaseUrl === "YOUR_SUPABASE_URL" || !supabaseUrl.trim()) supabaseUrl = localStorage.getItem("vault_supabase_url");
 if (!supabaseKey || supabaseKey === "YOUR_SUPABASE_ANON_KEY" || !supabaseKey.trim()) supabaseKey = localStorage.getItem("vault_supabase_anon_key");
 
 let client = null;
-const setupModal = document.getElementById('setup-modal');
-const setupForm = document.getElementById('setup-form');
 
 function initSupabase() {
     if (supabaseUrl && supabaseKey && supabaseUrl !== "YOUR_SUPABASE_URL" && supabaseKey !== "YOUR_SUPABASE_ANON_KEY") {
@@ -83,15 +227,7 @@ function initSupabase() {
     return false;
 }
 
-if (!initSupabase()) {
-    setupModal.classList.add('active');
-    setupForm.addEventListener('submit', e => {
-        e.preventDefault();
-        localStorage.setItem("vault_supabase_url", document.getElementById('setup-url').value.trim());
-        localStorage.setItem("vault_supabase_anon_key", document.getElementById('setup-key').value.trim());
-        location.reload();
-    });
-} else {
+if (initSupabase()) {
     client.auth.getSession().then(({data:{session}}) => {
         if (session && localStorage.getItem('vault_key')) location.href = 'dashboard.html';
     });
@@ -137,10 +273,10 @@ pwToggle.addEventListener('click', () => {
 
 form.addEventListener('submit', async e => {
     e.preventDefault();
-    if (!client) { showToast('Error', 'Supabase not configured.', 'error'); return; }
+    if (!client) { showToast('Configuration Error', 'Please ensure Supabase credentials are set in config.js.', 'error'); return; }
     submitBtn.disabled = true;
     const orig = submitBtn.textContent;
-    submitBtn.textContent = mode === 'login' ? 'Signing in…' : 'Creating…';
+    submitBtn.textContent = mode === 'login' ? 'Signing in…' : 'Creating account…';
     const email = document.getElementById('email').value.trim();
     const password = pwInput.value;
     try {
@@ -149,7 +285,7 @@ form.addEventListener('submit', async e => {
             if (error) throw error;
             const key = await window.VaultCrypto.deriveKey(password, email);
             localStorage.setItem('vault_key', await window.VaultCrypto.exportKeyToBase64(key));
-            showToast('Welcome', 'Redirecting…', 'success');
+            showToast('Welcome back', 'Accessing your vault...', 'success');
             setTimeout(() => location.href = 'dashboard.html', 600);
         } else {
             const {data, error} = await client.auth.signUp({email, password});
@@ -157,26 +293,30 @@ form.addEventListener('submit', async e => {
             if (data.session) {
                 const key = await window.VaultCrypto.deriveKey(password, email);
                 localStorage.setItem('vault_key', await window.VaultCrypto.exportKeyToBase64(key));
-                showToast('Account created', 'Redirecting…', 'success');
+                showToast('Success', 'Vault created. Redirecting...', 'success');
                 setTimeout(() => location.href = 'dashboard.html', 600);
             } else {
-                showToast('Check email', 'Verification sent. Sign in after confirming.', 'success');
+                showToast('Verification Required', 'Check your email to confirm your account.', 'success');
                 setMode('login'); submitBtn.disabled = false; submitBtn.textContent = orig;
             }
         }
-    } catch(err) { showToast('Error', err.message, 'error'); submitBtn.disabled = false; submitBtn.textContent = orig; }
+    } catch(err) { 
+        showToast('Authentication Error', err.message, 'error'); 
+        submitBtn.disabled = false; 
+        submitBtn.textContent = orig; 
+    }
 });
 
 function showToast(title, desc, type) {
     const t = document.createElement('div'); t.className = 'toast';
-    const ic = type==='success' ? `<svg class="toast-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`
-        : type==='error' ? `<svg class="toast-icon toast-icon-error" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`
-        : `<svg class="toast-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>`;
-    t.innerHTML = `${ic}<div class="toast-body"><div class="toast-title">${title}</div><div class="toast-desc">${desc}</div></div><button class="toast-close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>`;
+    const ic = type==='success' ? `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`
+        : type==='error' ? `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`
+        : `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>`;
+    t.innerHTML = `${ic}<div class="flex-1"><div class="text-sm font-semibold text-white">${title}</div><div class="text-xs text-text-secondary mt-0.5">${desc}</div></div><button class="text-text-muted hover:text-white transition-colors"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>`;
     toastContainer.appendChild(t);
-    const d = () => t.remove(); setTimeout(d, 4000);
-    t.querySelector('.toast-close').addEventListener('click', d);
+    const d = () => { t.style.opacity = '0'; t.style.transform = 'translateX(20px)'; setTimeout(() => t.remove(), 300); };
+    setTimeout(d, 4000);
+    t.querySelector('button').addEventListener('click', d);
 }
 </script>
-</body>
-</html>
+</body></html>
