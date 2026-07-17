@@ -1,7 +1,7 @@
 // js/app.js
 // Main Application Controller for Vault Password Manager Dashboard
 
-(async function() {
+(async function () {
     /* ---------- Supabase Credentials Setup ---------- */
     let supabaseUrl = window.SUPABASE_URL;
     let supabaseKey = window.SUPABASE_ANON_KEY;
@@ -126,7 +126,7 @@
     const userEmailDisplay = document.getElementById('user-email');
     const changePwForm = document.getElementById('change-pw-form');
     const settingsSubmitBtn = document.getElementById('settings-submit');
-    
+
 
     /* ---------- Profile Info Initialization ---------- */
     const userEmail = session.user.email;
@@ -137,7 +137,7 @@
     const profileNameEl = document.getElementById('profile-display-name');
     const profileAvatarEl = document.querySelector('.profile-trigger .avatar');
     const mobileAvatarDisplay = document.getElementById('mobile-avatar-display');
-    
+
     if (profileEmailEl) profileEmailEl.textContent = userEmail;
     if (profileNameEl) profileNameEl.textContent = userEmail.split('@')[0];
     if (profileAvatarEl) profileAvatarEl.textContent = userEmail.charAt(0).toUpperCase();
@@ -147,20 +147,20 @@
     const profileTrigger = document.getElementById('profile-menu-trigger');
     const mobileProfileTrigger = document.getElementById('mobile-profile-trigger');
     const profilePopover = document.getElementById('profile-popover-menu');
-    
+
     if (profilePopover) {
         const togglePopover = (e) => {
             e.stopPropagation();
             profilePopover.classList.toggle('active');
         };
-        
+
         if (profileTrigger) profileTrigger.addEventListener('click', togglePopover);
         if (mobileProfileTrigger) mobileProfileTrigger.addEventListener('click', togglePopover);
-        
+
         // Hide popover when clicking anywhere else
         window.addEventListener('click', (e) => {
-            const clickOnTrigger = (profileTrigger && profileTrigger.contains(e.target)) || 
-                                   (mobileProfileTrigger && mobileProfileTrigger.contains(e.target));
+            const clickOnTrigger = (profileTrigger && profileTrigger.contains(e.target)) ||
+                (mobileProfileTrigger && mobileProfileTrigger.contains(e.target));
             if (!clickOnTrigger && !profilePopover.contains(e.target)) {
                 profilePopover.classList.remove('active');
             }
@@ -281,27 +281,21 @@
     /* ---------- CRUD: Render Password Table ---------- */
     function renderPasswords(items) {
         pwTableBody.innerHTML = '';
+        const tableContainer = document.getElementById('table-container');
+        const emptyContainer = document.getElementById('empty-state-container');
 
         if (items.length === 0) {
-            pwTableBody.innerHTML = `
-                <tr>
-                    <td colspan="5">
-                        <div class="empty-state">
-                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-                                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-                            </svg>
-                            <span>No password records found. Click 'Add Password' to start.</span>
-                        </div>
-                    </td>
-                </tr>
-            `;
+            if (tableContainer) tableContainer.style.display = 'none';
+            if (emptyContainer) emptyContainer.style.display = 'block';
             return;
         }
 
+        if (tableContainer) tableContainer.style.display = '';
+        if (emptyContainer) emptyContainer.style.display = 'none';
+
         items.forEach(item => {
             const tr = document.createElement('tr');
-            
+
             // Format updated timestamp
             const dateObj = new Date(item.updated_at);
             const dateStr = dateObj.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
@@ -474,7 +468,7 @@
             return;
         }
 
-        const filtered = passwordsList.filter(item => 
+        const filtered = passwordsList.filter(item =>
             item.account_name.toLowerCase().includes(query) ||
             (item.username && item.username.toLowerCase().includes(query))
         );
@@ -507,14 +501,14 @@
             document.getElementById('gen-section').style.display = 'block';
             formTitle.textContent = 'Add Password';
             editIdInput.value = '';
-            
+
             genLenInput.value = 16;
             genLenVal.textContent = '16';
             genUpper.checked = true;
             genLower.checked = true;
             genNums.checked = true;
             genSyms.checked = true;
-            
+
             const generated = generateRandomPassword();
             if (generated) {
                 accountPwInput.value = generated;
@@ -531,12 +525,12 @@
     }
 
     addPwBtn.addEventListener('click', () => openModal());
-    
+
     const fabAddBtn = document.getElementById('fab-add-btn');
     if (fabAddBtn) {
         fabAddBtn.addEventListener('click', () => openModal());
     }
-    
+
     closeModalBtn.addEventListener('click', closeModal);
     cancelBtn.addEventListener('click', closeModal);
 
@@ -549,7 +543,7 @@
     togglePwVisBtn.addEventListener('click', () => {
         const isHidden = accountPwInput.type === 'password';
         accountPwInput.type = isHidden ? 'text' : 'password';
-        
+
         const eyeOpen = togglePwVisBtn.querySelector('#eye-open');
         const eyeClosed = togglePwVisBtn.querySelector('#eye-closed');
 
@@ -582,12 +576,12 @@
 
     fillGenBtn.addEventListener('click', () => {
         const genSection = document.getElementById('gen-section');
-        
+
         // Ensure options panel is visible
         if (genSection.style.display === 'none') {
             genSection.style.display = 'block';
         }
-        
+
         const generated = generateRandomPassword();
         if (generated) {
             accountPwInput.value = generated;
@@ -616,7 +610,7 @@
         let password = '';
         const randBuffer = new Uint32Array(len);
         crypto.getRandomValues(randBuffer);
-        
+
         for (let i = 0; i < len; i++) {
             password += charset[randBuffer[i] % charset.length];
         }
@@ -658,7 +652,7 @@
     /* ---------- Save Password Form Submit ---------- */
     pwForm.addEventListener('submit', async (e) => {
         e.preventDefault();
-        
+
         const saveBtn = document.getElementById('save-btn');
         saveBtn.disabled = true;
 
@@ -670,7 +664,7 @@
         try {
             // Encrypt password client-side using zero-knowledge engine
             const encryptedData = await window.VaultCrypto.encrypt(plainPassword, cryptoKey);
-            
+
             if (editId) {
                 // Update existing record
                 const { error } = await supabase
@@ -714,7 +708,7 @@
     /* ---------- Change Master Password Flow (with Re-encryption) ---------- */
     changePwForm.addEventListener('submit', async (e) => {
         e.preventDefault();
-        
+
         const curPw = document.getElementById('cur-pw').value;
         const newPw = document.getElementById('new-pw').value;
         const confirmPw = document.getElementById('confirm-pw').value;
