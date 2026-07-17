@@ -553,6 +553,27 @@
         }
     });
 
+    /* ---------- Password Visibility Toggles in Settings ---------- */
+    const settingsToggleBtns = document.querySelectorAll('.toggle-settings-pw');
+    settingsToggleBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const targetId = btn.getAttribute('data-target');
+            const targetInput = document.getElementById(targetId);
+            if (!targetInput) return;
+
+            const isHidden = targetInput.type === 'password';
+            targetInput.type = isHidden ? 'text' : 'password';
+
+            const eyeOpen = btn.querySelector('#eye-open');
+            const eyeClosed = btn.querySelector('#eye-closed');
+
+            if (eyeOpen && eyeClosed) {
+                eyeOpen.style.display = isHidden ? 'none' : 'block';
+                eyeClosed.style.display = isHidden ? 'block' : 'none';
+            }
+        });
+    });
+
     /* ---------- Password Strength & Generator Flow ---------- */
     accountPwInput.addEventListener('input', () => {
         evaluatePasswordStrength(accountPwInput.value);
