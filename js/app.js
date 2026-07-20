@@ -51,6 +51,7 @@
     let session = null;
     let cryptoKey = null;
     let passwordsList = []; // Stores the decrypted password entries in memory
+    let displayOrder = [];  // Tracks current display order (array of ids)
 
     /* ---------- Authenticate Session ---------- */
     const { data: { session: currentSession } } = await supabase.auth.getSession();
@@ -250,28 +251,88 @@
         });
     });
 
+    // Load locally saved row order if available
+    const savedOrderKey = 'vault_row_order_' + session.user.id;
+    const rawSavedOrder = localStorage.getItem(savedOrderKey);
+    if (rawSavedOrder) {
+        try { displayOrder = JSON.parse(rawSavedOrder); } catch (e) {}
+    }
+
+    /* ---------- CRUD: Save Row Order (Database & Local Storage) ---------- */
+    async function saveRowOrder() {
+        // 1. Save to LocalStorage immediately (instant reload protection)
+        localStorage.setItem(savedOrderKey, JSON.stringify(displayOrder));
+
+        // 2. Persist sort_order in Supabase database
+        try {
+            const updates = displayOrder.map((id, index) => {
+                return supabase
+                    .from('passwords')
+                    .update({ sort_order: index })
+                    .eq('id', id);
+            });
+
+            await Promise.all(updates);
+        } catch (err) {
+            console.error("Failed to save sort_order to database:", err);
+        }
+    }
+
     /* ---------- CRUD: Fetch & Decrypt Passwords ---------- */
     async function fetchPasswords() {
         try {
-            const { data, error } = await supabase
+            let data = null;
+            // Attempt to fetch ordered by sort_order
+            const res = await supabase
                 .from('passwords')
                 .select('*')
-                .order('pinned', { ascending: false })
+                .order('sort_order', { ascending: true })
                 .order('updated_at', { ascending: false });
 
-            if (error) throw error;
+            if (res.error) {
+                // If sort_order column does not exist in DB yet, fallback to updated_at
+                const fallbackRes = await supabase
+                    .from('passwords')
+                    .select('*')
+                    .order('updated_at', { ascending: false });
+                if (fallbackRes.error) throw fallbackRes.error;
+                data = fallbackRes.data;
+            } else {
+                data = res.data;
+            }
 
             passwordsList = [];
             for (let item of data) {
                 // Decrypt password string client-side
-                const decryptedValue = await window.VaultCrypto.decrypt(item.password, item.iv, cryptoKey);
+                let decryptedValue = '[Decryption Error]';
+                try {
+                    decryptedValue = await window.VaultCrypto.decrypt(item.password, item.iv, cryptoKey);
+                } catch (e) {
+                    console.error("Failed to decrypt item:", item.id, e);
+                }
                 passwordsList.push({
                     ...item,
                     decryptedPassword: decryptedValue
                 });
             }
 
-            renderPasswords(passwordsList);
+            // Merge fetched ids into displayOrder, preserving custom dragged positions
+            const fetchedIds = passwordsList.map(x => x.id);
+            if (displayOrder && displayOrder.length > 0) {
+                displayOrder = [
+                    ...displayOrder.filter(id => fetchedIds.includes(id)),
+                    ...fetchedIds.filter(id => !displayOrder.includes(id))
+                ];
+            } else {
+                displayOrder = fetchedIds;
+            }
+
+            // Save active display order locally
+            localStorage.setItem(savedOrderKey, JSON.stringify(displayOrder));
+
+            // Render in current display order
+            const ordered = displayOrder.map(id => passwordsList.find(x => x.id === id)).filter(Boolean);
+            renderPasswords(ordered);
         } catch (err) {
             console.error("Fetch Error:", err);
             showToast('Database Error', 'Could not load credentials: ' + err.message, 'error');
@@ -295,27 +356,31 @@
 
         items.forEach(item => {
             const tr = document.createElement('tr');
+            tr.setAttribute('data-id', item.id);
 
             // Format updated timestamp
             const dateObj = new Date(item.updated_at);
             const dateStr = dateObj.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
 
             tr.innerHTML = `
+                <td class="drag-handle-cell">
+                    <div class="drag-handle" draggable="true" title="Drag to reorder">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="8" y1="6" x2="16" y2="6"/>
+                            <line x1="8" y1="12" x2="16" y2="12"/>
+                            <line x1="8" y1="18" x2="16" y2="18"/>
+                        </svg>
+                    </div>
+                </td>
                 <td>
                     <div class="col-account-name">
-                        <button class="pin-row-btn ${item.pinned ? 'pinned' : ''}" data-id="${item.id}" data-pinned="${item.pinned}" title="${item.pinned ? 'Unpin' : 'Pin'}">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                                <line x1="12" y1="17" x2="12" y2="22"></line>
-                                <path d="M5 17h14v-1.76a2 2 0 0 0-.44-1.24l-2.78-3.48A2 2 0 0 1 15 9.28V5a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v4.28a2 2 0 0 1-.78 1.24l-2.78 3.48A2 2 0 0 0 5 15.24V17Z"></path>
-                            </svg>
-                        </button>
                         <span class="font-medium">${escapeHTML(item.account_name)}</span>
                     </div>
                 </td>
-                <td><span class="text-sec">${escapeHTML(item.username || '—')}</span></td>
+                <td><span class="text-sec">${escapeHTML(item.username || '\u2014')}</span></td>
                 <td>
                     <div class="col-pw-field">
-                        <span class="masked-pw" data-id="${item.id}">••••••••</span>
+                        <span class="masked-pw" data-id="${item.id}">&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;</span>
                         <button type="button" class="btn-icon toggle-row-pw-btn" data-id="${item.id}" title="Show Password">
                             <svg class="eye-open" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                                 <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
@@ -354,30 +419,13 @@
             pwTableBody.appendChild(tr);
         });
 
-        // Add Event Listeners for Dynamic Row Elements
+        // Add event listeners for row actions and drag-and-drop
         addTableActionListeners();
+        initDragAndDrop();
     }
 
     /* ---------- Table Row Actions ---------- */
     function addTableActionListeners() {
-        // Pin/Unpin Actions
-        document.querySelectorAll('.pin-row-btn').forEach(btn => {
-            btn.addEventListener('click', async () => {
-                const id = btn.getAttribute('data-id');
-                const isPinned = btn.getAttribute('data-pinned') === 'true';
-                try {
-                    const { error } = await supabase
-                        .from('passwords')
-                        .update({ pinned: !isPinned })
-                        .eq('id', id);
-                    if (error) throw error;
-                    fetchPasswords();
-                } catch (err) {
-                    showToast('Pinning Error', err.message, 'error');
-                }
-            });
-        });
-
         // Password Show/Hide Toggle
         document.querySelectorAll('.toggle-row-pw-btn').forEach(btn => {
             btn.addEventListener('click', () => {
@@ -460,15 +508,101 @@
         });
     }
 
+    /* ---------- Drag-and-Drop Row Reordering ---------- */
+    function initDragAndDrop() {
+        let dragSrcId = null;
+        const handles = pwTableBody.querySelectorAll('.drag-handle');
+        const rows = pwTableBody.querySelectorAll('tr');
+
+        handles.forEach(handle => {
+            handle.addEventListener('dragstart', (e) => {
+                const tr = handle.closest('tr');
+                if (!tr) return;
+                dragSrcId = tr.getAttribute('data-id');
+                tr.classList.add('dragging');
+                e.dataTransfer.effectAllowed = 'move';
+                e.dataTransfer.setData('text/plain', dragSrcId);
+                if (e.dataTransfer.setDragImage) {
+                    e.dataTransfer.setDragImage(tr, 15, 24);
+                }
+            });
+
+            handle.addEventListener('dragend', () => {
+                rows.forEach(r => {
+                    r.classList.remove('dragging');
+                    r.classList.remove('drag-over');
+                });
+            });
+        });
+
+        rows.forEach(row => {
+            row.addEventListener('dragover', (e) => {
+                e.preventDefault(); // Crucial to allow drop
+                e.dataTransfer.dropEffect = 'move';
+
+                const tr = e.target.closest('tr');
+                if (!tr) return;
+
+                const targetId = tr.getAttribute('data-id');
+                if (targetId && targetId !== dragSrcId) {
+                    rows.forEach(r => {
+                        if (r !== tr) r.classList.remove('drag-over');
+                    });
+                    tr.classList.add('drag-over');
+                }
+            });
+
+            row.addEventListener('dragleave', (e) => {
+                const tr = e.target.closest('tr');
+                if (tr && !tr.contains(e.relatedTarget)) {
+                    tr.classList.remove('drag-over');
+                }
+            });
+
+            row.addEventListener('drop', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+
+                const tr = e.target.closest('tr');
+                rows.forEach(r => r.classList.remove('drag-over'));
+
+                if (!tr) return;
+                const targetId = tr.getAttribute('data-id');
+                if (!dragSrcId || dragSrcId === targetId) return;
+
+                const srcIdx = displayOrder.indexOf(dragSrcId);
+                const tgtIdx = displayOrder.indexOf(targetId);
+                if (srcIdx < 0 || tgtIdx < 0) return;
+
+                // Move item in displayOrder array
+                displayOrder.splice(srcIdx, 1);
+                displayOrder.splice(tgtIdx, 0, dragSrcId);
+
+                // Save order to LocalStorage and database
+                saveRowOrder();
+
+                // Re-render in updated display order
+                const ordered = displayOrder
+                    .map(id => passwordsList.find(x => x.id === id))
+                    .filter(Boolean);
+                renderPasswords(ordered);
+            });
+        });
+    }
+
     /* ---------- Search / Filter ---------- */
     searchInput.addEventListener('input', () => {
         const query = searchInput.value.toLowerCase().trim();
+        const ordered = displayOrder
+            .map(id => passwordsList.find(x => x.id === id))
+            .filter(Boolean);
+
         if (!query) {
-            renderPasswords(passwordsList);
+            renderPasswords(ordered);
             return;
         }
 
-        const filtered = passwordsList.filter(item =>
+        const filtered = ordered.filter(item =>
             item.account_name.toLowerCase().includes(query) ||
             (item.username && item.username.toLowerCase().includes(query))
         );
@@ -488,11 +622,15 @@
             editIdInput.value = editItem.id;
             accountNameInput.value = editItem.account_name;
             accountUsernameInput.value = editItem.username || '';
-            accountPwInput.value = editItem.decryptedPassword;
-            evaluatePasswordStrength(editItem.decryptedPassword);
+
+            const isDecryptionError = editItem.decryptedPassword === '[Decryption Error]';
+            const pwVal = isDecryptionError ? '' : editItem.decryptedPassword;
+
+            accountPwInput.value = pwVal;
+            evaluatePasswordStrength(pwVal);
 
             // Sync slider value to current password length (capped min: 8, max: 64)
-            const currentLen = editItem.decryptedPassword.length;
+            const currentLen = pwVal.length || 16;
             const sliderLen = Math.max(8, Math.min(64, currentLen));
             genLenInput.value = sliderLen;
             genLenVal.textContent = sliderLen;

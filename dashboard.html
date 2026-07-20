@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html class="dark" lang="en">
+<html lang="en">
 
 <head>
     <meta charset="utf-8" />
@@ -8,25 +8,24 @@
     <link rel="stylesheet" href="css/style.css">
     <script src="https://cdn.tailwindcss.com?plugins=container-queries"></script>
     <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono&amp;display=swap"
+        href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,400;0,14..32,500;0,14..32,600;1,14..32,400&family=JetBrains+Mono:wght@400;500&display=swap"
         rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script id="tailwind-config">
         tailwind.config = {
-            darkMode: "class",
             theme: {
                 extend: {
                     colors: {
-                        "danger": "#ef4444",
-                        "background": "#0d0d0d",
-                        "surface": "#151515",
-                        "surface-variant": "#202020",
-                        "primary": "#ffffff",
-                        "on-primary": "#000000",
-                        "text-primary": "#e8e8e8",
-                        "text-secondary": "#a0a0a0",
-                        "text-muted": "#666666",
-                        "border-subtle": "#2a2a2a",
+                        "danger":       "#ee0000",
+                        "background":   "#fafafa",
+                        "surface":      "#f2f2f2",
+                        "surface-variant": "#ebebeb",
+                        "primary":      "#171717",
+                        "on-primary":   "#ffffff",
+                        "text-primary": "#171717",
+                        "text-secondary": "#4d4d4d",
+                        "text-muted":   "#8f8f8f",
+                        "border-subtle": "#ebebeb",
                     },
                     spacing: {
                         "sidebar-width": "260px",
@@ -67,7 +66,7 @@
     </style>
 </head>
 
-<body class="bg-background text-text-primary h-screen flex overflow-hidden">
+<body class="h-screen flex overflow-hidden" style="background:var(--canvas);color:var(--ink);">
     <div class="toast-container" id="toast-container"></div>
 
     <!-- Mobile Top Bar -->
@@ -158,9 +157,7 @@
             <header
                 class="h-16 lg:h-20 flex items-center justify-between px-4 lg:px-8 border-b border-border-subtle shrink-0">
                 <h1 class="text-xl lg:text-2xl font-semibold">Passwords</h1>
-                <button
-                    class="bg-primary text-on-primary px-4 py-2 rounded-md font-medium flex items-center gap-2 hover:opacity-90 transition-opacity"
-                    id="add-pw-btn">
+                <button class="btn-primary" id="add-pw-btn">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
                         stroke-linecap="round" stroke-linejoin="round">
                         <line x1="12" y1="5" x2="12" y2="19"></line>
@@ -191,11 +188,12 @@
                         <table class="password-table">
                             <thead>
                                 <tr>
-                                    <th>Name</th>
-                                    <th>Username</th>
-                                    <th>Password</th>
+                                    <th class="col-drag"></th>
+                                    <th class="col-name">Name</th>
+                                    <th class="col-user">Username</th>
+                                    <th class="col-pass">Password</th>
                                     <th class="col-updated">Updated</th>
-                                    <th class="text-right">Actions</th>
+                                    <th class="col-actions text-right">Actions</th>
                                 </tr>
                             </thead>
                             <tbody id="pw-table-body">

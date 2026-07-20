@@ -9,10 +9,14 @@ create table if not exists public.passwords (
   username text,
   password text not null, -- Stores the base64-encoded encrypted ciphertext
   iv text not null,        -- Stores the base64-encoded initialization vector (IV) for AES-GCM
-  pinned boolean default false not null,
+  sort_order integer default 0 not null,
   created_at timestamp with time zone default timezone('utc'::text, now()) not null,
   updated_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
+
+-- Migration queries if table already exists
+alter table public.passwords add column if not exists sort_order integer default 0;
+alter table public.passwords drop column if exists pinned;
 
 -- Enable Row Level Security (RLS)
 alter table public.passwords enable row level security;
