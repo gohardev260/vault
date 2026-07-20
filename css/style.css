@@ -242,7 +242,8 @@ input {
     width: 18px;
     height: 18px;
     flex-shrink: 0;
-    opacity: 0.7;
+    opacity: 0.6;
+    transition: opacity 0.12s;
 }
 
 .sidebar-tab:hover {
@@ -255,13 +256,17 @@ input {
 }
 
 .sidebar-tab.active {
-    background: var(--hairline-soft);
+    background: var(--hairline);
     color: var(--ink);
     font-weight: 500;
 }
 
 .sidebar-tab.active svg {
     opacity: 1;
+}
+
+.sidebar-tab.active:hover {
+    background: #e2e2e2;
 }
 
 .sidebar-bottom {

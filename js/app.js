@@ -251,19 +251,8 @@
         });
     });
 
-    // Load locally saved row order if available
-    const savedOrderKey = 'vault_row_order_' + session.user.id;
-    const rawSavedOrder = localStorage.getItem(savedOrderKey);
-    if (rawSavedOrder) {
-        try { displayOrder = JSON.parse(rawSavedOrder); } catch (e) {}
-    }
-
-    /* ---------- CRUD: Save Row Order (Database & Local Storage) ---------- */
+    /* ---------- CRUD: Save Row Order (Database Only) ---------- */
     async function saveRowOrder() {
-        // 1. Save to LocalStorage immediately (instant reload protection)
-        localStorage.setItem(savedOrderKey, JSON.stringify(displayOrder));
-
-        // 2. Persist sort_order in Supabase database
         try {
             const updates = displayOrder.map((id, index) => {
                 return supabase
@@ -272,9 +261,14 @@
                     .eq('id', id);
             });
 
-            await Promise.all(updates);
+            const results = await Promise.all(updates);
+            const err = results.find(r => r.error);
+            if (err) {
+                console.error("Supabase sort_order update error:", err.error);
+            }
         } catch (err) {
             console.error("Failed to save sort_order to database:", err);
+            showToast('Sync Error', 'Failed to save row order to database.', 'error');
         }
     }
 
@@ -282,7 +276,7 @@
     async function fetchPasswords() {
         try {
             let data = null;
-            // Attempt to fetch ordered by sort_order
+            // Fetch directly from Supabase ordered by sort_order ASC
             const res = await supabase
                 .from('passwords')
                 .select('*')
@@ -290,7 +284,7 @@
                 .order('updated_at', { ascending: false });
 
             if (res.error) {
-                // If sort_order column does not exist in DB yet, fallback to updated_at
+                // Fallback if sort_order column does not exist in DB yet
                 const fallbackRes = await supabase
                     .from('passwords')
                     .select('*')
@@ -303,7 +297,6 @@
 
             passwordsList = [];
             for (let item of data) {
-                // Decrypt password string client-side
                 let decryptedValue = '[Decryption Error]';
                 try {
                     decryptedValue = await window.VaultCrypto.decrypt(item.password, item.iv, cryptoKey);
@@ -316,23 +309,10 @@
                 });
             }
 
-            // Merge fetched ids into displayOrder, preserving custom dragged positions
-            const fetchedIds = passwordsList.map(x => x.id);
-            if (displayOrder && displayOrder.length > 0) {
-                displayOrder = [
-                    ...displayOrder.filter(id => fetchedIds.includes(id)),
-                    ...fetchedIds.filter(id => !displayOrder.includes(id))
-                ];
-            } else {
-                displayOrder = fetchedIds;
-            }
+            // Single source of truth: displayOrder is set strictly from database records
+            displayOrder = passwordsList.map(x => x.id);
 
-            // Save active display order locally
-            localStorage.setItem(savedOrderKey, JSON.stringify(displayOrder));
-
-            // Render in current display order
-            const ordered = displayOrder.map(id => passwordsList.find(x => x.id === id)).filter(Boolean);
-            renderPasswords(ordered);
+            renderPasswords(passwordsList);
         } catch (err) {
             console.error("Fetch Error:", err);
             showToast('Database Error', 'Could not load credentials: ' + err.message, 'error');
