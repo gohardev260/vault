@@ -1137,7 +1137,7 @@ input {
     display: none;
     flex-direction: column;
     gap: 2px;
-    box-shadow: var(--shadow-float);
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.12), 0 8px 10px -6px rgba(0, 0, 0, 0.08);
     z-index: 150;
 }
 
@@ -1147,6 +1147,20 @@ input {
         bottom: 76px;
         width: 230px;
     }
+}
+
+/* Explicit rule: when sidebar is collapsed, popover MUST pop out to the right of the 72px sidebar */
+aside#sidebar.is-collapsed ~ .profile-popover,
+aside.w-sidebar-collapsed ~ .profile-popover {
+    left: 84px !important;
+    bottom: 16px !important;
+    width: 190px !important;
+}
+
+aside#sidebar.is-expanded ~ .profile-popover {
+    left: 16px !important;
+    bottom: 76px !important;
+    width: 230px !important;
 }
 
 .profile-popover.active {
@@ -1208,38 +1222,90 @@ aside#sidebar.is-expanded .sidebar-toggle-icon {
 }
 
 /* ── Action Icons & Drag Handle Colors ── */
+/* Drag handle - Vibrant Orange */
+.col-drag,
+.drag-handle {
+    cursor: grab;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px;
+    border-radius: var(--radius-sm);
+}
+
 .col-drag svg,
-.col-drag {
+.drag-handle svg,
+.drag-handle svg line {
+    stroke: #f97316 !important;
     color: #f97316 !important;
-    transition: color 0.12s, transform 0.12s;
+    transition: stroke 0.15s ease, color 0.15s ease, transform 0.15s ease;
 }
 
-tr:hover .col-drag svg {
-    color: #ea580c !important;
-    transform: scale(1.15);
-}
-
-tr.dragging,
-table tbody tr.sortable-chosen {
+.drag-handle:hover,
+tr:hover .drag-handle {
     background-color: #fff7ed !important;
-    border-left: 3px solid #f97316 !important;
+}
+
+.drag-handle:hover svg,
+tr:hover .drag-handle svg,
+tr:hover .drag-handle svg line {
+    stroke: #ea580c !important;
+    color: #ea580c !important;
+    transform: scale(1.18);
+}
+
+tr.dragging {
+    background-color: #fff7ed !important;
+    border-left: 4px solid #f97316 !important;
+    opacity: 0.85;
+}
+
+tr.drag-over {
+    background-color: #ffedd5 !important;
+    border-top: 2px solid #ea580c !important;
 }
 
 /* Edit action icon - Emerald Green */
+.btn-icon.edit-row-btn,
+.btn-icon.edit-pw-btn,
+.action-btn.edit-btn,
+button.edit-btn,
+[data-action="edit"] {
+    transition: color 0.15s ease, background-color 0.15s ease, transform 0.15s ease;
+}
+
+.btn-icon.edit-row-btn:hover,
 .btn-icon.edit-pw-btn:hover,
 .action-btn.edit-btn:hover,
 button.edit-btn:hover,
 [data-action="edit"]:hover {
     color: #10b981 !important;
-    background-color: rgba(16, 185, 129, 0.1) !important;
+    background-color: rgba(16, 185, 129, 0.12) !important;
 }
 
-/* ── Global Micro-interactions ── */
-button:active, .btn-primary:active, .btn-secondary:active, .sidebar-tab:active, .popover-item:active {
-    transform: scale(0.97);
+.btn-icon.edit-row-btn:hover svg,
+.btn-icon.edit-pw-btn:hover svg {
+    stroke: #10b981 !important;
+    color: #10b981 !important;
+    transform: scale(1.15);
 }
 
-.sidebar-tab, .btn-primary, .btn-secondary, .popover-item, .mobile-nav-item, .btn-icon {
+/* ── Global Micro-interactions & Animations ── */
+button:active,
+.btn-primary:active,
+.btn-secondary:active,
+.sidebar-tab:active,
+.popover-item:active,
+.btn-icon:active {
+    transform: scale(0.96) !important;
+}
+
+.sidebar-tab,
+.btn-primary,
+.btn-secondary,
+.popover-item,
+.mobile-nav-item,
+.btn-icon {
     transition: transform 0.1s ease, background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
 }
 
@@ -1303,12 +1369,6 @@ button:active, .btn-primary:active, .btn-secondary:active, .sidebar-tab:active, 
     .main-content {
         margin-left: 72px;
         padding: 24px;
-    }
-
-    .profile-popover {
-        left: 12px;
-        bottom: 72px;
-        width: 180px;
     }
 
     /* hide "Updated" column at medium widths */
