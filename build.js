@@ -1,5 +1,5 @@
 // build.js
-// Build script to generate js/config.js from environment variables during deployment (e.g. Cloudflare Pages)
+// Build script to generate js/config.js from environment variables during deployment (e.g. Cloudflare Workers / Pages)
 
 const fs = require('fs');
 const path = require('path');
@@ -34,6 +34,10 @@ loadEnvFile('.dev.vars');
 
 const supabaseUrl = process.env.SUPABASE_URL || '';
 const supabasePublishableKey = process.env.SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY || '';
+
+if (!supabaseUrl || !supabasePublishableKey) {
+    console.warn('⚠️ Warning: SUPABASE_URL or SUPABASE_PUBLISHABLE_KEY environment variable is not set!');
+}
 
 const configContent = `// js/config.js
 // Auto-generated during build from environment variables

@@ -2,8 +2,8 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "vault",
   "compatibility_date": "2026-07-22",
-  "observability": {
-    "enabled": true
+  "build": {
+    "command": "node build.js"
   },
   "assets": {
     "directory": "."
