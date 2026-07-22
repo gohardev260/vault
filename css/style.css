@@ -1127,9 +1127,9 @@ input {
 
 .profile-popover {
     position: fixed;
-    bottom: 72px;
-    left: 12px;
-    width: 236px;
+    bottom: 16px;
+    left: 84px;
+    width: 190px;
     background: var(--canvas-elevated);
     border: 1px solid var(--hairline);
     border-radius: var(--radius-md);
@@ -1141,8 +1141,17 @@ input {
     z-index: 150;
 }
 
+@media (min-width: 1024px) {
+    .profile-popover {
+        left: 16px;
+        bottom: 76px;
+        width: 230px;
+    }
+}
+
 .profile-popover.active {
     display: flex;
+    animation: fadeIn 0.15s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .popover-item {
@@ -1161,6 +1170,77 @@ input {
     transition: background 0.12s, color 0.12s;
     outline: none;
     letter-spacing: -0.28px;
+}
+
+.popover-item.logout-btn {
+    color: var(--danger, #ee0000) !important;
+}
+
+.popover-item.logout-btn:hover {
+    background: #fff0f0 !important;
+    color: #cc0000 !important;
+}
+
+.popover-item.logout-btn svg {
+    color: currentColor !important;
+    stroke: currentColor !important;
+}
+
+/* ── Sidebar Toggle & States ── */
+aside#sidebar.is-collapsed {
+    width: 72px !important;
+}
+aside#sidebar.is-collapsed .sidebar-label {
+    display: none !important;
+}
+aside#sidebar.is-collapsed .sidebar-toggle-icon {
+    transform: rotate(180deg);
+}
+
+aside#sidebar.is-expanded {
+    width: 260px !important;
+}
+aside#sidebar.is-expanded .sidebar-label {
+    display: block !important;
+}
+aside#sidebar.is-expanded .sidebar-toggle-icon {
+    transform: rotate(0deg);
+}
+
+/* ── Action Icons & Drag Handle Colors ── */
+.col-drag svg,
+.col-drag {
+    color: #f97316 !important;
+    transition: color 0.12s, transform 0.12s;
+}
+
+tr:hover .col-drag svg {
+    color: #ea580c !important;
+    transform: scale(1.15);
+}
+
+tr.dragging,
+table tbody tr.sortable-chosen {
+    background-color: #fff7ed !important;
+    border-left: 3px solid #f97316 !important;
+}
+
+/* Edit action icon - Emerald Green */
+.btn-icon.edit-pw-btn:hover,
+.action-btn.edit-btn:hover,
+button.edit-btn:hover,
+[data-action="edit"]:hover {
+    color: #10b981 !important;
+    background-color: rgba(16, 185, 129, 0.1) !important;
+}
+
+/* ── Global Micro-interactions ── */
+button:active, .btn-primary:active, .btn-secondary:active, .sidebar-tab:active, .popover-item:active {
+    transform: scale(0.97);
+}
+
+.sidebar-tab, .btn-primary, .btn-secondary, .popover-item, .mobile-nav-item, .btn-icon {
+    transition: transform 0.1s ease, background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .popover-item svg {
@@ -1238,7 +1318,7 @@ input {
 }
 
 /* Tablets & Small Mobile (Mobile Layout) */
-@media (max-width: 768px) {
+@media (max-width: 767px) {
     .sidebar {
         display: none !important;
     }
@@ -1285,14 +1365,6 @@ input {
     .main-content {
         margin-left: 0;
         padding: 80px 16px 80px;
-    }
-
-    .profile-popover {
-        left: auto;
-        right: 12px;
-        top: 60px;
-        bottom: auto;
-        width: 200px;
     }
 
     .btn-back {

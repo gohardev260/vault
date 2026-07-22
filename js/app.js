@@ -168,6 +168,34 @@
         });
     }
 
+    /* ---------- Sidebar Collapse / Expand Toggle ---------- */
+    const sidebarToggleBtn = document.getElementById('sidebar-toggle-btn');
+    const sidebarEl = document.getElementById('sidebar');
+
+    if (sidebarToggleBtn && sidebarEl) {
+        const isCollapsedSaved = localStorage.getItem('vault_sidebar_collapsed') === 'true';
+        if (isCollapsedSaved) {
+            sidebarEl.classList.add('is-collapsed');
+            sidebarEl.classList.remove('is-expanded');
+        }
+
+        sidebarToggleBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const isCurrentlyCollapsed = sidebarEl.classList.contains('is-collapsed') ||
+                (window.innerWidth < 1024 && !sidebarEl.classList.contains('is-expanded'));
+
+            if (isCurrentlyCollapsed) {
+                sidebarEl.classList.remove('is-collapsed');
+                sidebarEl.classList.add('is-expanded');
+                localStorage.setItem('vault_sidebar_collapsed', 'false');
+            } else {
+                sidebarEl.classList.remove('is-expanded');
+                sidebarEl.classList.add('is-collapsed');
+                localStorage.setItem('vault_sidebar_collapsed', 'true');
+            }
+        });
+    }
+
     /* ---------- Mobile Navigation Menu Toggling (< 768px) ---------- */
     const mobileHamburgerBtn = document.getElementById('mobile-hamburger-btn');
     const mobileNavMenu = document.getElementById('mobile-nav-menu');
