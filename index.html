@@ -97,17 +97,17 @@
 
     <script>
         let supabaseUrl = window.SUPABASE_URL;
-        let supabaseKey = window.SUPABASE_PUBLISHABLE_KEY || window.SUPABASE_ANON_KEY || window.SUPABASE_KEY;
+        let supabaseKey = window.SUPABASE_PUBLISHABLE_KEY;
         if (!supabaseUrl || supabaseUrl === "YOUR_SUPABASE_URL" || !supabaseUrl.trim()) supabaseUrl = localStorage.getItem("vault_supabase_url");
-        if (!supabaseKey || supabaseKey === "YOUR_SUPABASE_PUBLISHABLE_KEY" || supabaseKey === "YOUR_SUPABASE_ANON_KEY" || !supabaseKey.trim()) {
-            supabaseKey = localStorage.getItem("vault_supabase_publishable_key") || localStorage.getItem("vault_supabase_anon_key");
+        if (!supabaseKey || supabaseKey === "YOUR_SUPABASE_PUBLISHABLE_KEY" || !supabaseKey.trim()) {
+            supabaseKey = localStorage.getItem("vault_supabase_publishable_key");
         }
 
         let client = null;
 
         function initSupabase() {
-            if (supabaseUrl && supabaseKey && supabaseUrl !== "YOUR_SUPABASE_URL" && supabaseKey !== "YOUR_SUPABASE_PUBLISHABLE_KEY" && supabaseKey !== "YOUR_SUPABASE_ANON_KEY") {
-                try { client = window.supabase.createClient(supabaseUrl, supabaseKey); return true; } catch (e) { return false; }
+            if (supabaseUrl && supabaseKey && supabaseUrl !== "YOUR_SUPABASE_URL" && supabaseKey !== "YOUR_SUPABASE_PUBLISHABLE_KEY") {
+                try { client = window.supabase.createClient(supabaseUrl, supabaseKey); return true; } catch (e) { console.error("Supabase init failed:", e); return false; }
             }
             return false;
         }

@@ -35,16 +35,11 @@ loadEnvFile('.dev.vars');
 const supabaseUrl = process.env.SUPABASE_URL || '';
 const supabasePublishableKey = process.env.SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY || '';
 
-if (!supabaseUrl || !supabasePublishableKey) {
-    console.warn('⚠️ Warning: SUPABASE_URL or SUPABASE_PUBLISHABLE_KEY environment variable is not set!');
-}
-
 const configContent = `// js/config.js
 // Auto-generated during build from environment variables
 window.SUPABASE_URL = "${supabaseUrl}";
 window.SUPABASE_PUBLISHABLE_KEY = "${supabasePublishableKey}";
-window.SUPABASE_ANON_KEY = "${supabasePublishableKey}";
 `;
 
 fs.writeFileSync(path.join(__dirname, 'js', 'config.js'), configContent);
-console.log('✅ Successfully generated js/config.js from environment variables.');
+console.log('✅ Generated js/config.js from environment variables.');
