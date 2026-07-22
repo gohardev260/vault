@@ -1,6 +1,11 @@
-# wrangler files
+# Cloudflare / Wrangler files
 .wrangler
 .dev.vars*
 !.dev.vars.example
 .env*
 !.env.example
+
+# Local build artifacts & generated config
+js/config.js
+!js/config.example.js
+node_modules/

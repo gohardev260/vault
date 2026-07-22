@@ -4,14 +4,14 @@
 (async function () {
     /* ---------- Supabase Credentials Setup ---------- */
     let supabaseUrl = window.SUPABASE_URL;
-    let supabaseKey = window.SUPABASE_ANON_KEY;
+    let supabaseKey = window.SUPABASE_PUBLISHABLE_KEY || window.SUPABASE_ANON_KEY || window.SUPABASE_KEY;
 
     const IS_PLACEHOLDER_URL = !supabaseUrl || supabaseUrl === "YOUR_SUPABASE_URL" || supabaseUrl.trim() === "";
-    const IS_PLACEHOLDER_KEY = !supabaseKey || supabaseKey === "YOUR_SUPABASE_ANON_KEY" || supabaseKey.trim() === "";
+    const IS_PLACEHOLDER_KEY = !supabaseKey || supabaseKey === "YOUR_SUPABASE_PUBLISHABLE_KEY" || supabaseKey === "YOUR_SUPABASE_ANON_KEY" || supabaseKey.trim() === "";
 
     if (IS_PLACEHOLDER_URL || IS_PLACEHOLDER_KEY) {
         supabaseUrl = localStorage.getItem("vault_supabase_url");
-        supabaseKey = localStorage.getItem("vault_supabase_anon_key");
+        supabaseKey = localStorage.getItem("vault_supabase_publishable_key") || localStorage.getItem("vault_supabase_anon_key");
     }
 
     let supabase = null;
@@ -19,7 +19,7 @@
     const setupForm = document.getElementById('setup-form');
 
     function initSupabase() {
-        if (supabaseUrl && supabaseKey && supabaseUrl !== "YOUR_SUPABASE_URL" && supabaseKey !== "YOUR_SUPABASE_ANON_KEY") {
+        if (supabaseUrl && supabaseKey && supabaseUrl !== "YOUR_SUPABASE_URL" && supabaseKey !== "YOUR_SUPABASE_PUBLISHABLE_KEY" && supabaseKey !== "YOUR_SUPABASE_ANON_KEY") {
             try {
                 supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
                 return true;
@@ -40,6 +40,7 @@
                 const urlInput = document.getElementById('setup-url').value.trim();
                 const keyInput = document.getElementById('setup-key').value.trim();
                 localStorage.setItem("vault_supabase_url", urlInput);
+                localStorage.setItem("vault_supabase_publishable_key", keyInput);
                 localStorage.setItem("vault_supabase_anon_key", keyInput);
                 window.location.reload();
             });

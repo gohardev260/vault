@@ -1,0 +1,9 @@
+{
+  "name": "vault",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Zero-Knowledge Password Manager",
+  "scripts": {
+    "build": "node build.js"
+  }
+}

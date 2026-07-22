@@ -125,11 +125,11 @@ You can configure your Supabase connection credentials in one of two ways:
 Open [`js/config.js`](file:///c:/Users/Gohar%20Rehman/Desktop/vault/js/config.js) and insert your project credentials:
 ```javascript
 window.SUPABASE_URL = "https://your-project-ref.supabase.co";
-window.SUPABASE_ANON_KEY = "your-actual-supabase-anon-key";
+window.SUPABASE_PUBLISHABLE_KEY = "sb_publishable_...";
 ```
 
 #### Option B: First-Run GUI Setup Wizard
-If `config.js` contains placeholders, Vault automatically launches an interactive configuration setup dialog in your browser on first load, prompting you to enter your **Supabase URL** and **Anon Key**. Credentials are saved securely to your browser's local storage.
+If `config.js` contains placeholders, Vault automatically launches an interactive configuration setup dialog in your browser on first load, prompting you to enter your **Supabase URL** and **Publishable Key**. Credentials are saved securely to your browser's local storage.
 
 ### 4. Running the App Locally
 
