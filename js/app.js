@@ -189,7 +189,12 @@
 
     mobileNavItems.forEach(item => {
         item.addEventListener('click', () => {
-            switchTab(item.getAttribute('data-tab'));
+            const tab = item.getAttribute('data-tab');
+            if (tab) {
+                switchTab(tab);
+            } else if (mobileNavMenu) {
+                mobileNavMenu.classList.remove('active');
+            }
         });
     });
 

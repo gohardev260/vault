@@ -1416,6 +1416,20 @@ input {
     font-weight: 500;
 }
 
+.mobile-nav-divider {
+    border-top: 1px solid var(--hairline);
+    margin: 4px 0;
+}
+
+.mobile-nav-item.logout-btn {
+    color: var(--danger, #ee0000);
+}
+
+.mobile-nav-item.logout-btn:hover {
+    background: #fff0f0;
+    color: #cc0000;
+}
+
 @keyframes fadeInDown {
     from {
         opacity: 0;

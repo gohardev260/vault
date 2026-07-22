@@ -80,27 +80,23 @@
             </svg>
             <span class="font-bold text-lg">Vault</span>
         </div>
-        <div class="flex items-center gap-3">
-            <div class="w-8 h-8 rounded-full bg-surface-variant flex items-center justify-center text-xs font-semibold cursor-pointer"
-                id="mobile-profile-trigger">
-                <span id="mobile-avatar-display">U</span>
-            </div>
-            <button class="p-1.5 rounded-lg hover:bg-surface-variant text-text-secondary hover:text-text-primary transition-colors focus:outline-none flex items-center justify-center"
-                id="mobile-hamburger-btn" aria-label="Toggle tab navigation menu">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
-                    stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="3" y1="12" x2="21" y2="12"></line>
-                    <line x1="3" y1="6" x2="21" y2="6"></line>
-                    <line x1="3" y1="18" x2="21" y2="18"></line>
-                </svg>
-            </button>
-        </div>
+        <button class="p-1.5 rounded-lg hover:bg-surface-variant text-text-secondary hover:text-text-primary transition-colors focus:outline-none flex items-center justify-center"
+            id="mobile-hamburger-btn" aria-label="Toggle tab navigation menu">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+                stroke-linecap="round" stroke-linejoin="round">
+                <line x1="3" y1="12" x2="21" y2="12"></line>
+                <line x1="3" y1="6" x2="21" y2="6"></line>
+                <line x1="3" y1="18" x2="21" y2="18"></line>
+            </svg>
+        </button>
     </header>
 
     <!-- Mobile Navigation Menu (Hamburger menu < 768px, text-only tabs on right side) -->
     <div class="mobile-nav-menu" id="mobile-nav-menu">
         <button class="mobile-nav-item active" data-tab="passwords">Passwords</button>
         <button class="mobile-nav-item" data-tab="profile">Settings</button>
+        <div class="mobile-nav-divider"></div>
+        <button class="mobile-nav-item logout-btn" id="mobile-logout-btn">Sign out</button>
     </div>
 
     <!-- Sidebar -->
