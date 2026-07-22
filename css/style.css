@@ -1338,37 +1338,25 @@ button:active,
     display: none;
 }
 
-/* Desktop Medium / Large Tablet (Collapsed Sidebar) */
-@media (max-width: 1024px) {
-    .sidebar {
-        width: 72px;
+/* Desktop Medium / Large Tablet (Collapsed Sidebar 768px - 1023px) */
+@media (max-width: 1023px) {
+    aside#sidebar:not(.is-expanded) {
+        width: 72px !important;
     }
 
-    .sidebar-logo span,
-    .sidebar-tab span,
-    .profile-trigger .profile-info {
+    aside#sidebar:not(.is-expanded) .sidebar-label {
         display: none !important;
     }
 
-    .sidebar-logo {
-        justify-content: center;
-        padding: 20px 0;
+    aside#sidebar:not(.is-expanded) .sidebar-tab {
+        justify-content: center !important;
+        padding: 10px 0 !important;
     }
 
-    .sidebar-tab {
-        justify-content: center;
-        padding: 10px 0;
-    }
-
-    .profile-trigger {
-        justify-content: center;
-        border-radius: 0;
-        padding: 10px 0;
-    }
-
-    .main-content {
-        margin-left: 72px;
-        padding: 24px;
+    aside#sidebar:not(.is-expanded) .profile-trigger {
+        justify-content: center !important;
+        border-radius: 0 !important;
+        padding: 10px 0 !important;
     }
 
     /* hide "Updated" column at medium widths */
