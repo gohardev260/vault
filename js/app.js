@@ -168,36 +168,59 @@
         });
     }
 
-    // Popover Settings button click
-    const popoverSettingsBtn = document.getElementById('popover-settings-btn');
-    if (popoverSettingsBtn) {
-        popoverSettingsBtn.addEventListener('click', () => {
-            switchTab('profile');
+    /* ---------- Mobile Circular Spinner Navigation (< 768px) ---------- */
+    const mobileCircularNav = document.getElementById('mobile-circular-nav');
+    const fabSpinnerBtn = document.getElementById('fab-spinner-btn');
+    const circularNavBackdrop = document.getElementById('circular-nav-backdrop');
+    const circularNavItems = document.querySelectorAll('.circular-nav-item');
+
+    function closeCircularNav() {
+        if (mobileCircularNav) mobileCircularNav.classList.remove('active');
+    }
+
+    if (fabSpinnerBtn && mobileCircularNav) {
+        fabSpinnerBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            mobileCircularNav.classList.toggle('active');
             if (profilePopover) profilePopover.classList.remove('active');
         });
     }
+
+    if (circularNavBackdrop) {
+        circularNavBackdrop.addEventListener('click', closeCircularNav);
+    }
+
+    circularNavItems.forEach(item => {
+        item.addEventListener('click', () => {
+            switchTab(item.getAttribute('data-tab'));
+        });
+    });
 
 
 
     /* ---------- Tab Navigation ---------- */
     function switchTab(tabId) {
+        const resolvedTabId = (tabId === 'settings') ? 'profile' : tabId;
+
         // Deactivate all tabs and panels
         sidebarTabs.forEach(tab => tab.classList.remove('active'));
-
+        circularNavItems.forEach(item => item.classList.remove('active'));
         panels.forEach(panel => panel.classList.remove('active'));
 
-        // Activate matching tab and panel
-        if (tabId === 'profile') {
+        // Activate matching desktop tab
+        const activeTab = document.querySelector(`.sidebar-tab[data-tab="${resolvedTabId}"]`);
+        if (activeTab) activeTab.classList.add('active');
 
-            // Select profile tab button as active if it exists
-            const profileTabBtn = document.querySelector('.sidebar-tab[data-tab="profile"]');
-            if (profileTabBtn) profileTabBtn.classList.add('active');
-            document.getElementById('panel-profile').classList.add('active');
-        } else {
-            const activeTab = document.querySelector(`.sidebar-tab[data-tab="${tabId}"]`);
-            if (activeTab) activeTab.classList.add('active');
-            document.getElementById(`panel-${tabId}`).classList.add('active');
-        }
+        // Activate matching circular nav item
+        const activeCircularItem = document.querySelector(`.circular-nav-item[data-tab="${resolvedTabId}"]`);
+        if (activeCircularItem) activeCircularItem.classList.add('active');
+
+        // Activate matching panel
+        const targetPanel = document.getElementById(`panel-${resolvedTabId}`);
+        if (targetPanel) targetPanel.classList.add('active');
+
+        // Close circular menu
+        closeCircularNav();
     }
 
     sidebarTabs.forEach(tab => {
