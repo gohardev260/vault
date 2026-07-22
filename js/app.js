@@ -168,29 +168,26 @@
         });
     }
 
-    /* ---------- Mobile Circular Spinner Navigation (< 768px) ---------- */
-    const mobileCircularNav = document.getElementById('mobile-circular-nav');
-    const fabSpinnerBtn = document.getElementById('fab-spinner-btn');
-    const circularNavBackdrop = document.getElementById('circular-nav-backdrop');
-    const circularNavItems = document.querySelectorAll('.circular-nav-item');
+    /* ---------- Mobile Navigation Menu Toggling (< 768px) ---------- */
+    const mobileHamburgerBtn = document.getElementById('mobile-hamburger-btn');
+    const mobileNavMenu = document.getElementById('mobile-nav-menu');
+    const mobileNavItems = document.querySelectorAll('.mobile-nav-item');
 
-    function closeCircularNav() {
-        if (mobileCircularNav) mobileCircularNav.classList.remove('active');
-    }
-
-    if (fabSpinnerBtn && mobileCircularNav) {
-        fabSpinnerBtn.addEventListener('click', (e) => {
+    if (mobileNavMenu && mobileHamburgerBtn) {
+        mobileHamburgerBtn.addEventListener('click', (e) => {
             e.stopPropagation();
-            mobileCircularNav.classList.toggle('active');
+            mobileNavMenu.classList.toggle('active');
             if (profilePopover) profilePopover.classList.remove('active');
+        });
+
+        window.addEventListener('click', (e) => {
+            if (!mobileHamburgerBtn.contains(e.target) && !mobileNavMenu.contains(e.target)) {
+                mobileNavMenu.classList.remove('active');
+            }
         });
     }
 
-    if (circularNavBackdrop) {
-        circularNavBackdrop.addEventListener('click', closeCircularNav);
-    }
-
-    circularNavItems.forEach(item => {
+    mobileNavItems.forEach(item => {
         item.addEventListener('click', () => {
             switchTab(item.getAttribute('data-tab'));
         });
@@ -204,23 +201,23 @@
 
         // Deactivate all tabs and panels
         sidebarTabs.forEach(tab => tab.classList.remove('active'));
-        circularNavItems.forEach(item => item.classList.remove('active'));
+        mobileNavItems.forEach(item => item.classList.remove('active'));
         panels.forEach(panel => panel.classList.remove('active'));
 
         // Activate matching desktop tab
         const activeTab = document.querySelector(`.sidebar-tab[data-tab="${resolvedTabId}"]`);
         if (activeTab) activeTab.classList.add('active');
 
-        // Activate matching circular nav item
-        const activeCircularItem = document.querySelector(`.circular-nav-item[data-tab="${resolvedTabId}"]`);
-        if (activeCircularItem) activeCircularItem.classList.add('active');
+        // Activate matching mobile tab
+        const activeMobileItem = document.querySelector(`.mobile-nav-item[data-tab="${resolvedTabId}"]`);
+        if (activeMobileItem) activeMobileItem.classList.add('active');
 
         // Activate matching panel
         const targetPanel = document.getElementById(`panel-${resolvedTabId}`);
         if (targetPanel) targetPanel.classList.add('active');
 
-        // Close circular menu
-        closeCircularNav();
+        // Close mobile nav menu
+        if (mobileNavMenu) mobileNavMenu.classList.remove('active');
     }
 
     sidebarTabs.forEach(tab => {
