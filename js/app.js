@@ -975,6 +975,199 @@
     });
 
 
+    /* ---------- Import & Export Functionality ---------- */
+    const exportCsvBtn = document.getElementById('export-csv-btn');
+    const importDropzone = document.getElementById('import-dropzone');
+    const csvFileInput = document.getElementById('csv-file-input');
+    const dropzoneText = document.getElementById('dropzone-text');
+    const importCsvBtn = document.getElementById('import-csv-btn');
+    let selectedCsvFile = null;
+
+    // Export CSV
+    if (exportCsvBtn) {
+        exportCsvBtn.addEventListener('click', () => {
+            if (!passwordsList || passwordsList.length === 0) {
+                showToast('Export Error', 'No password records available to export.', 'error');
+                return;
+            }
+
+            try {
+                // Prepare CSV header and rows
+                const headers = ['Account Name', 'Username', 'Password'];
+                const csvRows = [headers.join(',')];
+
+                passwordsList.forEach(item => {
+                    const name = `"${(item.account_name || '').replace(/"/g, '""')}"`;
+                    const uname = `"${(item.username || '').replace(/"/g, '""')}"`;
+                    const pass = `"${(item.decryptedPassword || '').replace(/"/g, '""')}"`;
+                    csvRows.push(`${name},${uname},${pass}`);
+                });
+
+                const csvContent = csvRows.join('\n');
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                const timestamp = new Date().toISOString().slice(0, 10);
+                
+                link.setAttribute('href', url);
+                link.setAttribute('download', `vault_passwords_export_${timestamp}.csv`);
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+
+                showToast('Export Successful', `Exported ${passwordsList.length} records to CSV.`, 'success');
+            } catch (err) {
+                console.error(err);
+                showToast('Export Error', 'Failed to generate CSV export: ' + err.message, 'error');
+            }
+        });
+    }
+
+    // Drag & Drop / File selection for Import
+    if (importDropzone && csvFileInput) {
+        importDropzone.addEventListener('click', () => csvFileInput.click());
+
+        importDropzone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            importDropzone.classList.add('border-primary');
+        });
+
+        importDropzone.addEventListener('dragleave', () => {
+            importDropzone.classList.remove('border-primary');
+        });
+
+        importDropzone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            importDropzone.classList.remove('border-primary');
+            if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                handleFileSelect(e.dataTransfer.files[0]);
+            }
+        });
+
+        csvFileInput.addEventListener('change', (e) => {
+            if (e.target.files && e.target.files[0]) {
+                handleFileSelect(e.target.files[0]);
+            }
+        });
+    }
+
+    function handleFileSelect(file) {
+        if (!file.name.endsWith('.csv')) {
+            showToast('Invalid File', 'Please select a valid .csv file.', 'error');
+            return;
+        }
+        selectedCsvFile = file;
+        if (dropzoneText) dropzoneText.textContent = `Selected: ${file.name}`;
+        if (importCsvBtn) importCsvBtn.disabled = false;
+    }
+
+    // CSV Parsing Helper
+    function parseCSV(text) {
+        const lines = text.split(/\r\n|\n/);
+        const results = [];
+        for (let line of lines) {
+            line = line.trim();
+            if (!line) continue;
+            // Parse CSV line respecting quotes
+            const row = [];
+            let inQuotes = false;
+            let currentToken = '';
+            for (let i = 0; i < line.length; i++) {
+                const char = line[i];
+                if (char === '"' && (i === 0 || line[i-1] !== '\\')) {
+                    if (inQuotes && line[i+1] === '"') {
+                        currentToken += '"';
+                        i++; // skip escaped quote
+                    } else {
+                        inQuotes = !inQuotes;
+                    }
+                } else if (char === ',' && !inQuotes) {
+                    row.push(currentToken.trim());
+                    currentToken = '';
+                } else {
+                    currentToken += char;
+                }
+            }
+            row.push(currentToken.trim());
+            results.push(row);
+        }
+        return results;
+    }
+
+    // Import CSV Execution
+    if (importCsvBtn) {
+        importCsvBtn.addEventListener('click', async () => {
+            if (!selectedCsvFile) return;
+
+            importCsvBtn.disabled = true;
+            importCsvBtn.textContent = 'Importing...';
+
+            try {
+                const text = await selectedCsvFile.text();
+                const rows = parseCSV(text);
+
+                if (rows.length === 0) {
+                    throw new Error('CSV file is empty.');
+                }
+
+                // Check if first row is header
+                let startIndex = 0;
+                const headerCandidate = rows[0].map(c => c.toLowerCase().replace(/[^a-z]/g, ''));
+                if (headerCandidate.some(h => h.includes('name') || h.includes('title') || h.includes('user') || h.includes('pass'))) {
+                    startIndex = 1;
+                }
+
+                const recordsToInsert = [];
+                for (let i = startIndex; i < rows.length; i++) {
+                    const row = rows[i];
+                    if (row.length < 2) continue; // Need at least name & password or username
+
+                    const accountName = row[0] || 'Imported Account';
+                    const username = row.length >= 3 ? row[1] : '';
+                    const plainPassword = row.length >= 3 ? row[2] : row[1];
+
+                    if (!plainPassword) continue;
+
+                    const encryptedData = await window.VaultCrypto.encrypt(plainPassword, cryptoKey);
+                    recordsToInsert.push({
+                        user_id: session.user.id,
+                        account_name: accountName,
+                        username: username,
+                        password: encryptedData.ciphertext,
+                        iv: encryptedData.iv
+                    });
+                }
+
+                if (recordsToInsert.length === 0) {
+                    throw new Error('No valid password records found in CSV file.');
+                }
+
+                const { error } = await supabase
+                    .from('passwords')
+                    .insert(recordsToInsert);
+
+                if (error) throw error;
+
+                showToast('Import Successful', `Successfully imported ${recordsToInsert.length} password records.`, 'success');
+                
+                // Reset import state
+                selectedCsvFile = null;
+                if (csvFileInput) csvFileInput.value = '';
+                if (dropzoneText) dropzoneText.textContent = 'Click to select or drag & drop a CSV file';
+                importCsvBtn.disabled = true;
+
+                // Refresh vault passwords list
+                fetchPasswords();
+            } catch (err) {
+                console.error(err);
+                showToast('Import Error', err.message, 'error');
+            } finally {
+                importCsvBtn.textContent = 'Import Passwords';
+            }
+        });
+    }
+
     /* ---------- Helpers ---------- */
     function escapeHTML(str) {
         if (!str) return '';

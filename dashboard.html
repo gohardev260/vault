@@ -94,6 +94,7 @@
     <!-- Mobile Navigation Menu (Hamburger menu < 768px, text-only tabs on right side) -->
     <div class="mobile-nav-menu" id="mobile-nav-menu">
         <button class="mobile-nav-item active" data-tab="passwords">Passwords</button>
+        <button class="mobile-nav-item" data-tab="import-export">Import / Export</button>
         <button class="mobile-nav-item" data-tab="profile">Settings</button>
         <div class="mobile-nav-divider"></div>
         <button class="mobile-nav-item logout-btn" id="mobile-logout-btn">Sign out</button>
@@ -129,6 +130,15 @@
                     <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
                 </svg>
                 <span class="font-medium sidebar-label lg:block hidden">Passwords</span>
+            </button>
+            <button class="sidebar-tab" data-tab="import-export" title="Import & Export">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="17 8 12 3 7 8"></polyline>
+                    <line x1="12" y1="3" x2="12" y2="15"></line>
+                </svg>
+                <span class="font-medium sidebar-label lg:block hidden">Import & Export</span>
             </button>
             <button class="sidebar-tab" data-tab="profile" title="Settings">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
@@ -230,6 +240,81 @@
                                 <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
                             </svg>
                             <span>No password records found. Click 'Add' to start.</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Import & Export Panel -->
+        <div class="panel flex-1 flex flex-col min-w-0 overflow-hidden" id="panel-import-export">
+            <!-- Header -->
+            <header class="h-16 lg:h-20 flex items-center justify-between px-4 lg:px-8 border-b border-border-subtle shrink-0">
+                <h1 class="text-xl lg:text-2xl font-semibold">Import &amp; Export</h1>
+            </header>
+            <!-- Content Area -->
+            <div class="flex-1 overflow-y-auto p-4 lg:p-8">
+                <div class="max-w-3xl mx-auto space-y-8">
+                    <!-- Export Section -->
+                    <div class="bg-surface rounded-xl border border-border-subtle p-6 space-y-4">
+                        <div class="flex items-start gap-4">
+                            <div class="p-3 bg-surface-variant rounded-lg text-primary shrink-0">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                    <polyline points="7 10 12 15 17 10"></polyline>
+                                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                                </svg>
+                            </div>
+                            <div class="flex-1">
+                                <h3 class="text-lg font-semibold mb-1">Export Vault Data</h3>
+                                <p class="text-sm text-text-secondary">Download a decrypted copy of all your saved account credentials in CSV format.</p>
+                            </div>
+                        </div>
+                        <div class="pt-2 flex flex-wrap gap-3 items-center justify-between border-t border-border-subtle/50">
+                            <span class="text-xs text-text-muted">File format: CSV (Account Name, Username, Password)</span>
+                            <button class="btn-primary" id="export-csv-btn">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                    <polyline points="7 10 12 15 17 10"></polyline>
+                                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                                </svg>
+                                Export CSV
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Import Section -->
+                    <div class="bg-surface rounded-xl border border-border-subtle p-6 space-y-4">
+                        <div class="flex items-start gap-4">
+                            <div class="p-3 bg-surface-variant rounded-lg text-primary shrink-0">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                    <polyline points="17 8 12 3 7 8"></polyline>
+                                    <line x1="12" y1="3" x2="12" y2="15"></line>
+                                </svg>
+                            </div>
+                            <div class="flex-1">
+                                <h3 class="text-lg font-semibold mb-1">Import Passwords</h3>
+                                <p class="text-sm text-text-secondary">Upload a CSV file containing your accounts. They will be encrypted with your master key and stored in your vault.</p>
+                            </div>
+                        </div>
+                        <div class="space-y-4 pt-2 border-t border-border-subtle/50">
+                            <div class="border-2 border-dashed border-border-subtle hover:border-primary/50 rounded-xl p-8 text-center cursor-pointer transition-colors" id="import-dropzone">
+                                <input type="file" id="csv-file-input" accept=".csv" class="hidden">
+                                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="mx-auto mb-3 text-text-muted">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                    <polyline points="14 2 14 8 20 8"></polyline>
+                                    <line x1="12" y1="18" x2="12" y2="12"></line>
+                                    <line x1="9" y1="15" x2="15" y2="15"></line>
+                                </svg>
+                                <p class="text-sm font-medium text-text-primary" id="dropzone-text">Click to select or drag & drop a CSV file</p>
+                                <p class="text-xs text-text-muted mt-1">Expected columns: title/name, username/email, password</p>
+                            </div>
+                            <div class="flex justify-end">
+                                <button class="btn-primary" id="import-csv-btn" disabled>
+                                    Import Passwords
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
