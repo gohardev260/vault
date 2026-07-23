@@ -501,6 +501,7 @@ input {
 
 .input-action-btn:hover {
     color: var(--ink);
+    background: var(--hairline-soft);
 }
 
 .input-action-btn:active {

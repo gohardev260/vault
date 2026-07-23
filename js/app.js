@@ -414,9 +414,15 @@
                     <div class="col-pw-field">
                         <span class="masked-pw" data-id="${item.id}">&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;</span>
                         <button type="button" class="btn-icon toggle-row-pw-btn" data-id="${item.id}" title="Show Password">
-                            <svg class="eye-open" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                            <svg class="eye-open" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                                 <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
                                 <circle cx="12" cy="12" r="3"></circle>
+                            </svg>
+                            <svg class="eye-closed" style="display:none" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"></path>
+                                <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"></path>
+                                <path d="M6.61 6.61A13.52 13.52 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"></path>
+                                <line x1="2" y1="2" x2="22" y2="22"></line>
                             </svg>
                         </button>
                         <button type="button" class="btn-icon copy-row-pw-btn" data-id="${item.id}" title="Copy to Clipboard">
@@ -460,34 +466,28 @@
     function addTableActionListeners() {
         // Password Show/Hide Toggle
         document.querySelectorAll('.toggle-row-pw-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
                 const id = btn.getAttribute('data-id');
                 const maskedEl = document.querySelector(`span[data-id="${id}"]`);
                 const item = passwordsList.find(x => x.id === id);
 
-                if (!item) return;
+                if (!item || !maskedEl) return;
+
+                const eyeOpen = btn.querySelector('.eye-open');
+                const eyeClosed = btn.querySelector('.eye-closed');
 
                 if (maskedEl.textContent === '••••••••') {
                     maskedEl.textContent = item.decryptedPassword;
                     maskedEl.className = 'plain-pw';
-                    btn.innerHTML = `
-                        <svg class="eye-closed" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"></path>
-                            <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"></path>
-                            <path d="M6.61 6.61A13.52 13.52 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"></path>
-                            <line x1="2" y1="2" x2="22" y2="22"></line>
-                        </svg>
-                    `;
+                    if (eyeOpen) eyeOpen.style.display = 'none';
+                    if (eyeClosed) eyeClosed.style.display = 'inline-block';
                     btn.title = "Hide Password";
                 } else {
                     maskedEl.textContent = '••••••••';
                     maskedEl.className = 'masked-pw';
-                    btn.innerHTML = `
-                        <svg class="eye-open" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
-                            <circle cx="12" cy="12" r="3"></circle>
-                        </svg>
-                    `;
+                    if (eyeOpen) eyeOpen.style.display = 'inline-block';
+                    if (eyeClosed) eyeClosed.style.display = 'none';
                     btn.title = "Show Password";
                 }
             });
@@ -710,23 +710,25 @@
     });
 
     /* ---------- Password Visibility Toggle in Modal ---------- */
-    togglePwVisBtn.addEventListener('click', () => {
-        const isHidden = accountPwInput.type === 'password';
-        accountPwInput.type = isHidden ? 'text' : 'password';
+    if (togglePwVisBtn && accountPwInput) {
+        togglePwVisBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            const isHidden = accountPwInput.type === 'password';
+            accountPwInput.type = isHidden ? 'text' : 'password';
 
-        const eyeOpen = togglePwVisBtn.querySelector('#eye-open');
-        const eyeClosed = togglePwVisBtn.querySelector('#eye-closed');
+            const eyeOpen = togglePwVisBtn.querySelector('.eye-open');
+            const eyeClosed = togglePwVisBtn.querySelector('.eye-closed');
 
-        if (eyeOpen && eyeClosed) {
-            eyeOpen.style.display = isHidden ? 'none' : 'block';
-            eyeClosed.style.display = isHidden ? 'block' : 'none';
-        }
-    });
+            if (eyeOpen) eyeOpen.style.display = isHidden ? 'none' : 'inline-block';
+            if (eyeClosed) eyeClosed.style.display = isHidden ? 'inline-block' : 'none';
+        });
+    }
 
     /* ---------- Password Visibility Toggles in Settings ---------- */
     const settingsToggleBtns = document.querySelectorAll('.toggle-settings-pw');
     settingsToggleBtns.forEach(btn => {
-        btn.addEventListener('click', () => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
             const targetId = btn.getAttribute('data-target');
             const targetInput = document.getElementById(targetId);
             if (!targetInput) return;
@@ -734,13 +736,11 @@
             const isHidden = targetInput.type === 'password';
             targetInput.type = isHidden ? 'text' : 'password';
 
-            const eyeOpen = btn.querySelector('#eye-open');
-            const eyeClosed = btn.querySelector('#eye-closed');
+            const eyeOpen = btn.querySelector('.eye-open');
+            const eyeClosed = btn.querySelector('.eye-closed');
 
-            if (eyeOpen && eyeClosed) {
-                eyeOpen.style.display = isHidden ? 'none' : 'block';
-                eyeClosed.style.display = isHidden ? 'block' : 'none';
-            }
+            if (eyeOpen) eyeOpen.style.display = isHidden ? 'none' : 'inline-block';
+            if (eyeClosed) eyeClosed.style.display = isHidden ? 'inline-block' : 'none';
         });
     });
 
