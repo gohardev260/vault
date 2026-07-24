@@ -122,8 +122,8 @@
         const toggleLink = document.getElementById('toggle-link');
         const pwInput = document.getElementById('password');
         const pwToggle = document.getElementById('pw-toggle');
-        const eyeOpen = document.getElementById('eye-open');
-        const eyeClosed = document.getElementById('eye-closed');
+        const eyeOpen = pwToggle ? pwToggle.querySelector('.eye-open') : null;
+        const eyeClosed = pwToggle ? pwToggle.querySelector('.eye-closed') : null;
         const toastContainer = document.getElementById('toast-container');
         let mode = 'login';
 
